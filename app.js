@@ -178,33 +178,47 @@
   function openEdit(id) {
     editId = id || null;
     seq = [];
+    if (!state.moves.length) {
+      SEED.forEach((name) => {
+        if (!state.moves.some((m) => m.name === name)) {
+          state.moves.push({ id: uid(), name });
+        }
+      });
+      save(state);
+      renderMoves();
+    }
     if (id) {
       const w = state.wods.find((x) => x.id === id);
       if (!w) return;
-      $("#defWork").value = w.defWork;
-      $("#defRest").value = w.defRest;
-            seq = w.seq.map((s) => ({ ...s }));
+      const dw = $("#defWork");
+      const dr = $("#defRest");
+      if (dw) dw.value = String(w.defWork);
+      if (dr) dr.value = String(w.defRest);
+      seq = w.seq.map((s) => ({ ...s }));
     } else {
-      $("#defWork").value = 40;
-      $("#defRest").value = 20;
-          }
+      const dw = $("#defWork");
+      const dr = $("#defRest");
+      if (dw) dw.value = "40";
+      if (dr) dr.value = "20";
+    }
     renderPick();
     renderSeq();
     show("edit");
+    window.scrollTo(0, 0);
   }
 
   function renderPick() {
     const box = $("#pickMoves");
+    if (!box) return;
     box.innerHTML = "";
-    if (!state.moves.length) return;
     state.moves.forEach((m) => {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "chip";
       b.textContent = "+ " + m.name;
       b.onclick = () => {
-        const work = Number($("#defWork").value) || 40;
-        const rest = Number($("#defRest").value) || 0;
+        const work = Number(($("#defWork") || {}).value) || 40;
+        const rest = Number(($("#defRest") || {}).value) || 0;
         seq.push({ moveId: m.id, name: m.name, work, rest });
         renderSeq();
       };
@@ -268,12 +282,23 @@
     });
   }
 
-  $("#btnNewWod").onclick = () => openEdit(null);
-  $("#btnCancelEdit").onclick = () => {
-    show("home");
-    renderWods();
-  };
-  $("#btnSaveWod").onclick = () => {
+  const btnNew = $("#btnNewWod");
+  if (btnNew) {
+    btnNew.addEventListener("click", (e) => {
+      e.preventDefault();
+      openEdit(null);
+    });
+  }
+  const btnCancel = $("#btnCancelEdit");
+  if (btnCancel) {
+    btnCancel.addEventListener("click", () => {
+      show("home");
+      renderWods();
+    });
+  }
+  const btnSave = $("#btnSaveWod");
+  if (btnSave) {
+    btnSave.addEventListener("click", () => {
     if (!seq.length) {
       alert("حداقل یک حرکت");
       return;
@@ -281,8 +306,8 @@
     const payload = {
       id: editId || uid(),
       name: "",
-      defWork: Number($("#defWork").value) || 40,
-      defRest: Number($("#defRest").value) || 0,
+      defWork: Number(($("#defWork") || {}).value) || 40,
+      defRest: Number(($("#defRest") || {}).value) || 0,
       restAfterLast: false,
       seq: seq.map((s) => ({
         moveId: s.moveId,
@@ -298,7 +323,8 @@
     save(state);
     show("home");
     renderWods();
-  };
+    });
+  }
 
   function buildTimeline(w) {
     const steps = [];

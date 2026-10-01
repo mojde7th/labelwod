@@ -1,4 +1,4 @@
-const CACHE = "labelwod-v5";
+const CACHE = "labelwod-v6";
 const ASSETS = [
   "./",
   "./index.html",
