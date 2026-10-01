@@ -30,7 +30,7 @@
   let run = null;
   let raf = 0;
 
-  const viewIds = ["home", "moves", "edit", "run", "done"];
+  const viewIds = ["home", "edit", "run", "done"];
 
   function show(name) {
     viewIds.forEach((k) => {
@@ -75,28 +75,18 @@
     } catch {}
   }
 
-  function renderMoves() {
-    const ul = $("#moveList");
-    if (!ul) return;
-    ul.innerHTML = "";
-    state.moves.forEach((m) => {
-      const li = document.createElement("li");
-      li.innerHTML = '<div><span class="title"></span></div><div class="ops"></div>';
-      li.querySelector(".title").textContent = m.name;
-      const del = document.createElement("button");
-      del.type = "button";
-      del.className = "btn danger sm";
-      del.textContent = "حذف";
-      del.onclick = () => {
-        if (!confirm("حذف؟")) return;
-        state.moves = state.moves.filter((x) => x.id !== m.id);
-        save(state);
-        renderMoves();
-        renderPick();
-      };
-      li.querySelector(".ops").append(del);
-      ul.append(li);
-    });
+  function addMoveToSeq(m) {
+    const work = Number(($("#defWork") || {}).value) || 40;
+    const rest = Number(($("#defRest") || {}).value) || 0;
+    seq.push({ moveId: m.id, name: m.name, work, rest });
+    renderSeq();
+  }
+
+  function removeMove(id) {
+    if (!confirm("این حرکت از فهرست سریع حذف شود؟")) return;
+    state.moves = state.moves.filter((x) => x.id !== id);
+    save(state);
+    renderPick();
   }
 
   function renderWods() {
@@ -146,7 +136,6 @@
   function openEdit(id) {
     editId = id || null;
     seq = [];
-    renderMoves();
     if (id) {
       const w = state.wods.find((x) => x.id === id);
       if (!w) return;
@@ -161,6 +150,8 @@
       if (dw) dw.value = "40";
       if (dr) dr.value = "20";
     }
+    const moveInput = $("#moveName");
+    if (moveInput) moveInput.value = "";
     renderPick();
     renderSeq();
     show("edit");
@@ -174,17 +165,21 @@
     if (!box) return;
     box.innerHTML = "";
     state.moves.forEach((m) => {
+      const wrap = document.createElement("div");
+      wrap.className = "chip-wrap";
       const b = document.createElement("button");
       b.type = "button";
       b.className = "chip";
       b.textContent = "+ " + m.name;
-      b.onclick = () => {
-        const work = Number(($("#defWork") || {}).value) || 40;
-        const rest = Number(($("#defRest") || {}).value) || 0;
-        seq.push({ moveId: m.id, name: m.name, work, rest });
-        renderSeq();
-      };
-      box.append(b);
+      b.onclick = () => addMoveToSeq(m);
+      const x = document.createElement("button");
+      x.type = "button";
+      x.className = "chip-x";
+      x.setAttribute("aria-label", "حذف");
+      x.textContent = "×";
+      x.onclick = () => removeMove(m.id);
+      wrap.append(b, x);
+      box.append(wrap);
     });
   }
 
@@ -431,15 +426,18 @@
         const name = ($("#moveName") || {}).value;
         const n = (name || "").trim();
         if (!n) return;
-        if (state.moves.some((m) => m.name === n)) {
-          alert("تکراری است");
-          return;
+        let m = state.moves.find((x) => x.name === n);
+        if (!m) {
+          m = { id: uid(), name: n };
+          state.moves.push(m);
+          save(state);
+          renderPick();
         }
-        state.moves.push({ id: uid(), name: n });
-        save(state);
+        addMoveToSeq(m);
         $("#moveName").value = "";
-        renderMoves();
-        renderPick();
+        try {
+          $("#moveName").focus();
+        } catch {}
       };
     }
     $$("#navTabs button").forEach((b) => {
@@ -448,9 +446,6 @@
         if (v === "edit") return;
         show(v);
         if (v === "home") renderWods();
-        if (v === "moves") {
-          renderMoves();
-        }
       };
     });
     const btnPause = $("#btnPause");
@@ -513,11 +508,10 @@
   };
 
   wire();
-  renderMoves();
   renderWods();
   show("home");
 
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js?v=8").catch(function () {});
+    navigator.serviceWorker.register("./sw.js?v=9").catch(function () {});
   }
 })();

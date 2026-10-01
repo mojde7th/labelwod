@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="styles.css?v=8"/>
+  <link rel="stylesheet" href="styles.css?v=9"/>
   <style>
     .view{display:none!important}
     .view.on{display:block!important}
@@ -26,7 +26,6 @@
       <div class="brand">Moj<span>dei</span></div>
       <nav class="tabs" id="navTabs">
         <button type="button" data-view="home" class="on" id="navHome">تمرین‌ها</button>
-        <button type="button" data-view="moves" id="navMoves">حرکات</button>
         <button type="button" data-view="edit" id="tabEdit" hidden>ویرایش</button>
       </nav>
     </header>
@@ -35,14 +34,6 @@
       <section id="view-home" class="view on">
         <button type="button" class="btn primary sm" id="btnNewWod">جدید</button>
         <ul id="wodList" class="list"></ul>
-      </section>
-
-      <section id="view-moves" class="view">
-        <form id="moveForm" class="row-form">
-          <input id="moveName" type="text" placeholder="نام حرکت" required maxlength="60"/>
-          <button type="submit" class="btn primary sm">افزودن</button>
-        </form>
-        <ul id="moveList" class="list"></ul>
       </section>
 
       <section id="view-edit" class="view">
@@ -58,7 +49,12 @@
           </div>
         </div>
         <div class="card">
-          <h3>حرکات</h3>
+          <h3>حرکات این تمرین</h3>
+          <form id="moveForm" class="row-form">
+            <input id="moveName" type="text" placeholder="نام حرکت جدید" required maxlength="60"/>
+            <button type="submit" class="btn primary sm">افزودن به تمرین</button>
+          </form>
+          <p class="hint">نام را بنویس و بزن؛ همان لحظه به همین تمرین اضافه می‌شود. برای دوباره استفاده، از دکمه‌های زیر بزن.</p>
           <div id="pickMoves" class="chips"></div>
           <ol id="seqList" class="seq"></ol>
         </div>
@@ -99,9 +95,8 @@
       </section>
     </main>
   </div>
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
   <script>
-    // پشتیبان اگر اسکریپت اصلی دیر لود شد
     document.getElementById("btnNewWod").addEventListener("click", function () {
       if (window.Mojdei && typeof window.Mojdei.newWod === "function") {
         window.Mojdei.newWod();

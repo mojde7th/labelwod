@@ -101,15 +101,33 @@ input, select {
 .card h3 { margin: 0 0 6px; font-size: 15px; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
-.chip {
+.chip-wrap {
+  display: inline-flex;
+  align-items: stretch;
   border: 1px dashed var(--line);
-  background: #0a0f0e;
-  color: var(--txt);
   border-radius: 999px;
+  overflow: hidden;
+  background: #0a0f0e;
+}
+.chip {
+  border: 0;
+  background: transparent;
+  color: var(--txt);
   padding: 8px 12px;
   font: 600 13px "IBM Plex Sans Arabic", sans-serif;
+  cursor: pointer;
 }
-.chip:active { border-color: var(--work); color: var(--work); }
+.chip:active { color: var(--work); }
+.chip-x {
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: transparent;
+  color: var(--danger);
+  padding: 8px 10px;
+  font: 700 13px "IBM Plex Sans Arabic", sans-serif;
+  cursor: pointer;
+}
+.chip-x:active { background: #2a1414; }
 .seq { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; counter-reset: s; }
 .seq li {
   counter-increment: s;
