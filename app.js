@@ -1,23 +1,23 @@
-(() => {
+﻿(() => {
   const LS = "labelwod-v1";
   const CIRC = 2 * Math.PI * 54;
 
   const SEED = [
-    "اسکوات جامپ",
-    "برپی",
-    "شنا سوئدی",
-    "لانگز متناوب",
-    "پلانک",
-    "کرانچ",
-    "کوهنورد",
-    "جامپینگ جک",
-    "نشر جانب",
-    "اسکوات هوایی",
-    "دیوارنشینی",
-    "حرکت پروانه",
-    "کشش همسترینگ",
-    "کتل‌بل سوئینگ",
-    "روئینگ",
+    "Ø§Ø³Ú©ÙˆØ§Øª Ø¬Ø§Ù…Ù¾",
+    "Ø¨Ø±Ù¾ÛŒ",
+    "Ø´Ù†Ø§ Ø³ÙˆØ¦Ø¯ÛŒ",
+    "Ù„Ø§Ù†Ú¯Ø² Ù…ØªÙ†Ø§ÙˆØ¨",
+    "Ù¾Ù„Ø§Ù†Ú©",
+    "Ú©Ø±Ø§Ù†Ú†",
+    "Ú©ÙˆÙ‡Ù†ÙˆØ±Ø¯",
+    "Ø¬Ø§Ù…Ù¾ÛŒÙ†Ú¯ Ø¬Ú©",
+    "Ù†Ø´Ø± Ø¬Ø§Ù†Ø¨",
+    "Ø§Ø³Ú©ÙˆØ§Øª Ù‡ÙˆØ§ÛŒÛŒ",
+    "Ø¯ÛŒÙˆØ§Ø±Ù†Ø´ÛŒÙ†ÛŒ",
+    "Ø­Ø±Ú©Øª Ù¾Ø±ÙˆØ§Ù†Ù‡",
+    "Ú©Ø´Ø´ Ù‡Ù…Ø³ØªØ±ÛŒÙ†Ú¯",
+    "Ú©ØªÙ„â€ŒØ¨Ù„ Ø³ÙˆØ¦ÛŒÙ†Ú¯",
+    "Ø±ÙˆØ¦ÛŒÙ†Ú¯",
   ];
 
   const $ = (s, r = document) => r.querySelector(s);
@@ -86,10 +86,7 @@
   function renderMoves() {
     const ul = $("#moveList");
     ul.innerHTML = "";
-    if (!state.moves.length) {
-      ul.innerHTML = '<li><span class="meta">کتابخانه خالی است</span></li>';
-      return;
-    }
+    if (!state.moves.length) return;
     state.moves.forEach((m) => {
       const li = document.createElement("li");
       li.innerHTML = `<div><span class="title"></span></div><div class="ops"></div>`;
@@ -97,9 +94,9 @@
       const del = document.createElement("button");
       del.type = "button";
       del.className = "btn danger";
-      del.textContent = "حذف";
+      del.textContent = "Ø­Ø°Ù";
       del.onclick = () => {
-        if (!confirm("حذف این حرکت؟")) return;
+        if (!confirm("Ø­Ø°Ù Ø§ÛŒÙ† Ø­Ø±Ú©ØªØŸ")) return;
         state.moves = state.moves.filter((x) => x.id !== m.id);
         save(state);
         renderMoves();
@@ -115,7 +112,7 @@
     const name = $("#moveName").value.trim();
     if (!name) return;
     if (state.moves.some((m) => m.name === name)) {
-      alert("این نام از قبل هست");
+      alert("Ø§ÛŒÙ† Ù†Ø§Ù… Ø§Ø² Ù‚Ø¨Ù„ Ù‡Ø³Øª");
       return;
     }
     state.moves.push({ id: uid(), name });
@@ -140,7 +137,6 @@
   function renderWods() {
     const ul = $("#wodList");
     ul.innerHTML = "";
-    $("#emptyWods").hidden = state.wods.length > 0;
     state.wods
       .slice()
       .sort((a, b) => b.updated - a.updated)
@@ -148,24 +144,29 @@
         const li = document.createElement("li");
         const left = document.createElement("div");
         left.innerHTML = `<span class="title"></span><span class="meta"></span>`;
-        left.querySelector(".title").textContent = w.name;
+        const names = w.seq.map((s) => s.name);
+        const title =
+          names.length <= 3
+            ? names.join(" Â· ")
+            : names.slice(0, 3).join(" Â· ") + " +" + (names.length - 3);
+        left.querySelector(".title").textContent = title || "ØªÙ…Ø±ÛŒÙ†";
         left.querySelector(".meta").textContent =
-          w.seq.length + " حرکت · کار " + w.defWork + "ث · استراحت " + w.defRest + "ث";
+          w.seq.length + " Ø­Ø±Ú©Øª Â· " + w.defWork + "Ø« / " + w.defRest + "Ø«";
         const ops = document.createElement("div");
         ops.className = "ops";
         const start = document.createElement("button");
         start.className = "btn primary";
-        start.textContent = "شروع";
+        start.textContent = "Ø´Ø±ÙˆØ¹";
         start.onclick = () => startRun(w.id);
         const edit = document.createElement("button");
         edit.className = "btn";
-        edit.textContent = "ویرایش";
+        edit.textContent = "ÙˆÛŒØ±Ø§ÛŒØ´";
         edit.onclick = () => openEdit(w.id);
         const del = document.createElement("button");
         del.className = "btn danger";
-        del.textContent = "حذف";
+        del.textContent = "Ø­Ø°Ù";
         del.onclick = () => {
-          if (!confirm("حذف این تمرین؟")) return;
+          if (!confirm("Ø­Ø°ÙØŸ")) return;
           state.wods = state.wods.filter((x) => x.id !== w.id);
           save(state);
           renderWods();
@@ -183,13 +184,11 @@
     if (id) {
       const w = state.wods.find((x) => x.id === id);
       if (!w) return;
-      $("#wodName").value = w.name;
       $("#defWork").value = w.defWork;
       $("#defRest").value = w.defRest;
       $("#restAfterLast").value = w.restAfterLast ? "1" : "0";
       seq = w.seq.map((s) => ({ ...s }));
     } else {
-      $("#wodName").value = "";
       $("#defWork").value = 40;
       $("#defRest").value = 20;
       $("#restAfterLast").value = "0";
@@ -202,10 +201,7 @@
   function renderPick() {
     const box = $("#pickMoves");
     box.innerHTML = "";
-    if (!state.moves.length) {
-      box.innerHTML = '<span class="hint">اول از تب حرکات، حرکت اضافه کن.</span>';
-      return;
-    }
+    if (!state.moves.length) return;
     state.moves.forEach((m) => {
       const b = document.createElement("button");
       b.type = "button";
@@ -232,10 +228,10 @@
       const timing = document.createElement("div");
       timing.className = "timing";
       timing.innerHTML = `
-        <label class="lbl">کار (ث)
+        <label class="lbl">Ú©Ø§Ø± (Ø«)
           <input type="number" min="5" max="600" data-k="work" value="${s.work}"/>
         </label>
-        <label class="lbl">استراحت بعدش (ث)
+        <label class="lbl">Ø§Ø³ØªØ±Ø§Ø­Øª Ø¨Ø¹Ø¯Ø´ (Ø«)
           <input type="number" min="0" max="300" data-k="rest" value="${s.rest}"/>
         </label>`;
       timing.querySelectorAll("input").forEach((inp) => {
@@ -248,7 +244,7 @@
       const up = document.createElement("button");
       up.type = "button";
       up.className = "btn";
-      up.textContent = "بالا";
+      up.textContent = "Ø¨Ø§Ù„Ø§";
       up.disabled = i === 0;
       up.onclick = () => {
         [seq[i - 1], seq[i]] = [seq[i], seq[i - 1]];
@@ -257,7 +253,7 @@
       const down = document.createElement("button");
       down.type = "button";
       down.className = "btn";
-      down.textContent = "پایین";
+      down.textContent = "Ù¾Ø§ÛŒÛŒÙ†";
       down.disabled = i === seq.length - 1;
       down.onclick = () => {
         [seq[i + 1], seq[i]] = [seq[i], seq[i + 1]];
@@ -266,7 +262,7 @@
       const rm = document.createElement("button");
       rm.type = "button";
       rm.className = "btn danger";
-      rm.textContent = "حذف از لیست";
+      rm.textContent = "Ø­Ø°Ù Ø§Ø² Ù„ÛŒØ³Øª";
       rm.onclick = () => {
         seq.splice(i, 1);
         renderSeq();
@@ -283,14 +279,13 @@
     renderWods();
   };
   $("#btnSaveWod").onclick = () => {
-    const name = $("#wodName").value.trim() || "تمرین بدون نام";
     if (!seq.length) {
-      alert("حداقل یک حرکت اضافه کن");
+      alert("Ø­Ø¯Ø§Ù‚Ù„ ÛŒÚ© Ø­Ø±Ú©Øª");
       return;
     }
     const payload = {
       id: editId || uid(),
-      name,
+      name: "",
       defWork: Number($("#defWork").value) || 40,
       defRest: Number($("#defRest").value) || 0,
       restAfterLast: $("#restAfterLast").value === "1",
@@ -351,7 +346,6 @@
       pausedTotal: 0,
       playing: true,
     };
-    $("#runWodName").textContent = w.name;
     renderRunQueue();
     paintRun(true);
     show("run");
@@ -370,7 +364,7 @@
       if (step && i === step.index) li.className = "now";
       li.innerHTML = `<span></span><span></span>`;
       li.children[0].textContent = i + 1 + ". " + s.name;
-      li.children[1].textContent = s.work + "ث / استراحت " + s.rest + "ث";
+      li.children[1].textContent = s.work + "Ø« / Ø§Ø³ØªØ±Ø§Ø­Øª " + s.rest + "Ø«";
       ol.append(li);
     });
   }
@@ -390,21 +384,21 @@
     }
     const elapsed = Math.min(currentElapsed(), step.seconds);
     const phase = $("#phaseBadge");
-    phase.textContent = step.kind === "work" ? "کار" : "استراحت";
+    phase.textContent = step.kind === "work" ? "Ú©Ø§Ø±" : "Ø§Ø³ØªØ±Ø§Ø­Øª";
     phase.className = "phase " + step.kind;
     $("#curMove").textContent =
-      step.kind === "work" ? step.name : "استراحت";
+      step.kind === "work" ? step.name : "Ø§Ø³ØªØ±Ø§Ø­Øª";
     if (step.kind === "rest" && step.nextName) {
-      $("#nextMove").textContent = "حرکت بعدی: " + step.nextName;
+      $("#nextMove").textContent = "Ø­Ø±Ú©Øª Ø¨Ø¹Ø¯ÛŒ: " + step.nextName;
     } else if (step.kind === "work" && step.nextName) {
-      $("#nextMove").textContent = "بعدی: " + step.nextName;
+      $("#nextMove").textContent = "Ø¨Ø¹Ø¯ÛŒ: " + step.nextName;
     } else if (step.kind === "work") {
-      $("#nextMove").textContent = "آخرین حرکت";
+      $("#nextMove").textContent = "Ø¢Ø®Ø±ÛŒÙ† Ø­Ø±Ú©Øª";
     } else {
-      $("#nextMove").textContent = "پایان نزدیک است";
+      $("#nextMove").textContent = "Ù¾Ø§ÛŒØ§Ù† Ù†Ø²Ø¯ÛŒÚ© Ø§Ø³Øª";
     }
     $("#runProgress").textContent =
-      "حرکت " + (step.index + 1) + " از " + step.total;
+      "Ø­Ø±Ú©Øª " + (step.index + 1) + " Ø§Ø² " + step.total;
     $("#elapsed").textContent = fmt(elapsed);
     $("#target").textContent = "/ " + fmt(step.seconds);
     const ring = $("#ringFg");
@@ -444,9 +438,7 @@
   function finishRun() {
     cancelAnimationFrame(raf);
     beep("end");
-    const n = run ? run.wod.seq.length : 0;
     run = null;
-    $("#doneSummary").textContent = n + " حرکت انجام شد. آفرین.";
     show("done");
   }
 
@@ -455,13 +447,13 @@
     if (run.playing) {
       run.playing = false;
       run.pausedAt = performance.now();
-      $("#btnPause").textContent = "ادامه";
+      $("#btnPause").textContent = "Ø§Ø¯Ø§Ù…Ù‡";
       cancelAnimationFrame(raf);
     } else {
       run.pausedTotal += performance.now() - run.pausedAt;
       run.pausedAt = null;
       run.playing = true;
-      $("#btnPause").textContent = "توقف";
+      $("#btnPause").textContent = "ØªÙˆÙ‚Ù";
       tick();
     }
   };
@@ -472,7 +464,7 @@
       run.pausedTotal += performance.now() - run.pausedAt;
       run.pausedAt = null;
       run.playing = true;
-      $("#btnPause").textContent = "توقف";
+      $("#btnPause").textContent = "ØªÙˆÙ‚Ù";
     }
     advance();
     cancelAnimationFrame(raf);
@@ -480,7 +472,7 @@
   };
 
   $("#btnStop").onclick = () => {
-    if (!confirm("تمرین قطع شود؟")) return;
+    if (!confirm("ØªÙ…Ø±ÛŒÙ† Ù‚Ø·Ø¹ Ø´ÙˆØ¯ØŸ")) return;
     cancelAnimationFrame(raf);
     run = null;
     show("home");

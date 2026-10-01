@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="LabelWOD"/>
-  <title>LabelWOD — تایمر تمرین با برچسب حرکت</title>
+  <title>LabelWOD</title>
   <link rel="manifest" href="manifest.webmanifest"/>
   <link rel="icon" href="icon.svg" type="image/svg+xml"/>
   <link rel="apple-touch-icon" href="icon-180.png"/>
@@ -30,32 +30,24 @@
     <main>
       <!-- HOME -->
       <section id="view-home" class="view on">
-        <p class="lede">مثل اسمارت‌وود، ولی هر اینتروال اسم حرکت جاری و حرکت بعدی را نشان می‌دهد.</p>
         <button type="button" class="btn primary block" id="btnNewWod">تمرین جدید</button>
         <ul id="wodList" class="list"></ul>
-        <p class="hint" id="emptyWods">هنوز تمرینی نداری. اول چند حرکت بساز، بعد تمرین بساز.</p>
       </section>
 
       <!-- MOVES LIBRARY -->
       <section id="view-moves" class="view">
-        <p class="lede">کتابخانه حرکات. موقع ساخت تمرین از این‌ها انتخاب می‌کنی.</p>
         <form id="moveForm" class="row-form">
-          <input id="moveName" type="text" placeholder="نام حرکت مثلاً اسکوات جامپ" required maxlength="60"/>
+          <input id="moveName" type="text" placeholder="نام حرکت" required maxlength="60"/>
           <button type="submit" class="btn primary">افزودن</button>
         </form>
-        <button type="button" class="btn ghost block" id="btnSeed">افزودن حرکات پیش‌فرض</button>
+        <button type="button" class="btn ghost block" id="btnSeed">حرکات پیش‌فرض</button>
         <ul id="moveList" class="list"></ul>
       </section>
 
       <!-- EDIT WORKOUT -->
       <section id="view-edit" class="view">
-        <label class="lbl">نام تمرین
-          <input id="wodName" type="text" maxlength="80" placeholder="مثلاً تاباتای صبح"/>
-        </label>
-
         <div class="card">
-          <h3>زمان‌بندی یکدست</h3>
-          <p class="hint">اگر برای هر حرکت جدا نگذاری، همه از این استفاده می‌کنند.</p>
+          <h3>زمان‌بندی</h3>
           <div class="grid2">
             <label class="lbl">کار (ثانیه)
               <input id="defWork" type="number" min="5" max="600" value="40"/>
@@ -64,17 +56,16 @@
               <input id="defRest" type="number" min="0" max="300" value="20"/>
             </label>
           </div>
-          <label class="lbl">استراحت بعد از آخرین حرکت
+          <label class="lbl">استراحت بعد از آخرین
             <select id="restAfterLast">
-              <option value="0">نه، تمام شود</option>
-              <option value="1">بله، مثل بقیه</option>
+              <option value="0">نه</option>
+              <option value="1">بله</option>
             </select>
           </label>
         </div>
 
         <div class="card">
-          <h3>ترتیب حرکات</h3>
-          <p class="hint">ترتیب = همان ترتیبی که اضافه می‌کنی. با فلش جابه‌جا کن.</p>
+          <h3>حرکات</h3>
           <div id="pickMoves" class="chips"></div>
           <ol id="seqList" class="seq"></ol>
         </div>
@@ -88,7 +79,6 @@
       <!-- RUN -->
       <section id="view-run" class="view run">
         <div class="run-meta">
-          <span id="runWodName"></span>
           <span id="runProgress"></span>
         </div>
         <div id="phaseBadge" class="phase work">کار</div>
@@ -117,8 +107,7 @@
       <!-- DONE -->
       <section id="view-done" class="view">
         <h2 class="done-title">تمام شد</h2>
-        <p id="doneSummary" class="lede"></p>
-        <button type="button" class="btn primary block" id="btnBackHome">بازگشت به تمرین‌ها</button>
+        <button type="button" class="btn primary block" id="btnBackHome">بازگشت</button>
       </section>
     </main>
   </div>
