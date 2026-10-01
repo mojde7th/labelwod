@@ -2,24 +2,6 @@
   const LS = "mojdei-v1";
   const CIRC = 2 * Math.PI * 54;
 
-  const SEED = [
-    "اسکوات جامپ",
-    "برپی",
-    "شنا سوئدی",
-    "لانگز متناوب",
-    "پلانک",
-    "کرانچ",
-    "کوهنورد",
-    "جامپینگ جک",
-    "نشر جانب",
-    "اسکوات هوایی",
-    "دیوارنشینی",
-    "حرکت پروانه",
-    "کشش همسترینگ",
-    "کتل‌بل سوئینگ",
-    "روئینگ",
-  ];
-
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
@@ -93,17 +75,6 @@
     } catch {}
   }
 
-  function ensureSeed() {
-    let added = false;
-    SEED.forEach((name) => {
-      if (!state.moves.some((m) => m.name === name)) {
-        state.moves.push({ id: uid(), name });
-        added = true;
-      }
-    });
-    if (added) save(state);
-  }
-
   function renderMoves() {
     const ul = $("#moveList");
     if (!ul) return;
@@ -175,7 +146,6 @@
   function openEdit(id) {
     editId = id || null;
     seq = [];
-    ensureSeed();
     renderMoves();
     if (id) {
       const w = state.wods.find((x) => x.id === id);
@@ -454,14 +424,6 @@
         renderWods();
       };
     }
-    const btnSeed = $("#btnSeed");
-    if (btnSeed) {
-      btnSeed.onclick = function () {
-        ensureSeed();
-        renderMoves();
-        renderPick();
-      };
-    }
     const moveForm = $("#moveForm");
     if (moveForm) {
       moveForm.onsubmit = function (e) {
@@ -487,7 +449,6 @@
         show(v);
         if (v === "home") renderWods();
         if (v === "moves") {
-          ensureSeed();
           renderMoves();
         }
       };
@@ -551,13 +512,12 @@
     show: show,
   };
 
-  ensureSeed();
   wire();
   renderMoves();
   renderWods();
   show("home");
 
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js?v=7").catch(function () {});
+    navigator.serviceWorker.register("./sw.js?v=8").catch(function () {});
   }
 })();
