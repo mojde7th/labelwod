@@ -89,23 +89,69 @@
   function pickVoice() {
     if (!window.speechSynthesis) return null;
     const voices = speechSynthesis.getVoices() || [];
-    const fa = voices.find((v) => /^fa/i.test(v.lang));
+    const fa =
+      voices.find((v) => /^fa(-|_|$)/i.test(v.lang)) ||
+      voices.find((v) => /persian|farsi|iran/i.test(v.name));
     if (fa) return fa;
-    const soft = voices.find((v) => /female|zira|sara|aria|google/i.test(v.name));
-    return soft || voices[0] || null;
+    return null;
+  }
+
+  function faOnes(n) {
+    return ["صفر", "یک", "دو", "سه", "چهار", "پنج", "شش", "هفت", "هشت", "نه"][n] || String(n);
+  }
+  function faTeens(n) {
+    return [
+      "ده",
+      "یازده",
+      "دوازده",
+      "سیزده",
+      "چهارده",
+      "پانزده",
+      "شانزده",
+      "هفده",
+      "هجده",
+      "نوزده",
+    ][n - 10];
+  }
+  function faTens(n) {
+    return ["", "", "بیست", "سی", "چهل", "پنجاه", "شصت", "هفتاد", "هشتاد", "نود"][n];
+  }
+  function faHundreds(n) {
+    return ["", "صد", "دویست", "سیصد", "چهارصد", "پانصد", "ششصد", "هفتصد", "هشتصد", "نهصد"][n];
+  }
+  function toFaWords(n) {
+    n = Math.max(0, Math.round(Number(n) || 0));
+    if (n < 10) return faOnes(n);
+    if (n < 20) return faTeens(n);
+    if (n < 100) {
+      const t = Math.floor(n / 10);
+      const o = n % 10;
+      return o ? faTens(t) + " و " + faOnes(o) : faTens(t);
+    }
+    if (n < 1000) {
+      const h = Math.floor(n / 100);
+      const r = n % 100;
+      return r ? faHundreds(h) + " و " + toFaWords(r) : faHundreds(h);
+    }
+    return String(n);
   }
 
   function speakSeconds(n) {
     if (!window.speechSynthesis) return;
     const sec = Math.max(0, Math.round(n));
+    const phrase = toFaWords(sec) + " ثانیه";
     try {
       speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(String(sec));
+      const u = new SpeechSynthesisUtterance(phrase);
       const voice = pickVoice();
-      if (voice) u.voice = voice;
-      u.lang = (voice && voice.lang) || "fa-IR";
-      u.rate = 0.92;
-      u.pitch = 1.05;
+      if (voice) {
+        u.voice = voice;
+        u.lang = voice.lang || "fa-IR";
+      } else {
+        u.lang = "fa-IR";
+      }
+      u.rate = 0.9;
+      u.pitch = 1;
       u.volume = 1;
       speechSynthesis.speak(u);
     } catch {}
@@ -137,14 +183,12 @@
   }
 
   function renderWods() {
-    const empty = $("#homeEmpty");
-    const wrap = $("#homeListWrap");
     const ul = $("#wodList");
+    const hint = $("#wodEmptyHint");
     if (!ul) return;
     ul.innerHTML = "";
     const has = state.wods.length > 0;
-    if (empty) empty.hidden = has;
-    if (wrap) wrap.hidden = !has;
+    if (hint) hint.hidden = has;
     if (!has) return;
     state.wods
       .slice()
@@ -519,7 +563,6 @@
       }
     };
     bindNew("#btnNewWod");
-    bindNew("#btnNewWodEmpty");
     const btnCancel = $("#btnCancelEdit");
     if (btnCancel) {
       btnCancel.onclick = function () {
@@ -655,6 +698,6 @@
   show("home");
 
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js?v=11").catch(function () {});
+    navigator.serviceWorker.register("./sw.js?v=12").catch(function () {});
   }
 })();

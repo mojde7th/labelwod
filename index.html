@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Vazirmatn:wght@500;700;800;900&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="styles.css?v=11"/>
+  <link rel="stylesheet" href="styles.css?v=12"/>
   <style>
     .view{display:none!important}
     .view.on{display:block!important}
@@ -32,11 +32,12 @@
 
     <main>
       <section id="view-home" class="view on">
-        <div id="homeEmpty" class="home-empty" hidden>
-          <button type="button" class="btn-hero" id="btnNewWodEmpty">جدید</button>
+        <div class="home-head">
+          <button type="button" class="btn-hero" id="btnNewWod">جدید</button>
         </div>
-        <div id="homeListWrap" class="home-list-wrap" hidden>
-          <button type="button" class="btn primary sm" id="btnNewWod">+ جدید</button>
+        <div class="wod-panel card" id="wodPanel">
+          <h3 id="wodPanelTitle">تمرین‌های ذخیره‌شده</h3>
+          <p id="wodEmptyHint" class="empty-hint">هنوز تمرینی نیست. بالا «جدید» را بزن.</p>
           <ul id="wodList" class="list"></ul>
         </div>
       </section>
@@ -117,19 +118,13 @@
       </section>
     </main>
   </div>
-  <script src="app.js?v=11"></script>
+  <script src="app.js?v=12"></script>
   <script>
-    function wireNew(id) {
-      var el = document.getElementById(id);
-      if (!el) return;
-      el.addEventListener("click", function () {
-        if (window.Mojdei && typeof window.Mojdei.newWod === "function") {
-          window.Mojdei.newWod();
-        }
-      });
-    }
-    wireNew("btnNewWod");
-    wireNew("btnNewWodEmpty");
+    document.getElementById("btnNewWod").addEventListener("click", function () {
+      if (window.Mojdei && typeof window.Mojdei.newWod === "function") {
+        window.Mojdei.newWod();
+      }
+    });
   </script>
 </body>
 </html>
