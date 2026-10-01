@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="theme-color" content="#0c1110"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="LabelWOD"/>
+  <title>LabelWOD — تایمر تمرین با برچسب حرکت</title>
+  <link rel="manifest" href="manifest.webmanifest"/>
+  <link rel="icon" href="icon.svg" type="image/svg+xml"/>
+  <link rel="apple-touch-icon" href="icon-180.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <div id="app">
+    <header class="top" id="topBar">
+      <div class="brand">Label<span>WOD</span></div>
+      <nav class="tabs" id="navTabs">
+        <button type="button" data-view="home" class="on">تمرین‌ها</button>
+        <button type="button" data-view="moves">حرکات</button>
+        <button type="button" data-view="edit" id="tabEdit" hidden>ویرایش</button>
+      </nav>
+    </header>
+
+    <main>
+      <!-- HOME -->
+      <section id="view-home" class="view on">
+        <p class="lede">مثل اسمارت‌وود، ولی هر اینتروال اسم حرکت جاری و حرکت بعدی را نشان می‌دهد.</p>
+        <button type="button" class="btn primary block" id="btnNewWod">تمرین جدید</button>
+        <ul id="wodList" class="list"></ul>
+        <p class="hint" id="emptyWods">هنوز تمرینی نداری. اول چند حرکت بساز، بعد تمرین بساز.</p>
+      </section>
+
+      <!-- MOVES LIBRARY -->
+      <section id="view-moves" class="view">
+        <p class="lede">کتابخانه حرکات. موقع ساخت تمرین از این‌ها انتخاب می‌کنی.</p>
+        <form id="moveForm" class="row-form">
+          <input id="moveName" type="text" placeholder="نام حرکت مثلاً اسکوات جامپ" required maxlength="60"/>
+          <button type="submit" class="btn primary">افزودن</button>
+        </form>
+        <button type="button" class="btn ghost block" id="btnSeed">افزودن حرکات پیش‌فرض</button>
+        <ul id="moveList" class="list"></ul>
+      </section>
+
+      <!-- EDIT WORKOUT -->
+      <section id="view-edit" class="view">
+        <label class="lbl">نام تمرین
+          <input id="wodName" type="text" maxlength="80" placeholder="مثلاً تاباتای صبح"/>
+        </label>
+
+        <div class="card">
+          <h3>زمان‌بندی یکدست</h3>
+          <p class="hint">اگر برای هر حرکت جدا نگذاری، همه از این استفاده می‌کنند.</p>
+          <div class="grid2">
+            <label class="lbl">کار (ثانیه)
+              <input id="defWork" type="number" min="5" max="600" value="40"/>
+            </label>
+            <label class="lbl">استراحت (ثانیه)
+              <input id="defRest" type="number" min="0" max="300" value="20"/>
+            </label>
+          </div>
+          <label class="lbl">استراحت بعد از آخرین حرکت
+            <select id="restAfterLast">
+              <option value="0">نه، تمام شود</option>
+              <option value="1">بله، مثل بقیه</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="card">
+          <h3>ترتیب حرکات</h3>
+          <p class="hint">ترتیب = همان ترتیبی که اضافه می‌کنی. با فلش جابه‌جا کن.</p>
+          <div id="pickMoves" class="chips"></div>
+          <ol id="seqList" class="seq"></ol>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn primary block" id="btnSaveWod">ذخیره تمرین</button>
+          <button type="button" class="btn ghost block" id="btnCancelEdit">انصراف</button>
+        </div>
+      </section>
+
+      <!-- RUN -->
+      <section id="view-run" class="view run">
+        <div class="run-meta">
+          <span id="runWodName"></span>
+          <span id="runProgress"></span>
+        </div>
+        <div id="phaseBadge" class="phase work">کار</div>
+        <h2 id="curMove" class="cur-move">—</h2>
+        <p id="nextMove" class="next-move">بعدی: —</p>
+
+        <div class="clock-wrap">
+          <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+            <circle cx="60" cy="60" r="54" class="ring-bg"/>
+            <circle cx="60" cy="60" r="54" class="ring-fg" id="ringFg"/>
+          </svg>
+          <div class="clock">
+            <div id="elapsed" class="elapsed">0:00</div>
+            <div id="target" class="target">/ 0:40</div>
+          </div>
+        </div>
+
+        <div class="run-actions">
+          <button type="button" class="btn big" id="btnPause">توقف</button>
+          <button type="button" class="btn big primary" id="btnSkip">پاس / بعدی</button>
+          <button type="button" class="btn big danger" id="btnStop">پایان</button>
+        </div>
+        <ol id="runQueue" class="run-queue"></ol>
+      </section>
+
+      <!-- DONE -->
+      <section id="view-done" class="view">
+        <h2 class="done-title">تمام شد</h2>
+        <p id="doneSummary" class="lede"></p>
+        <button type="button" class="btn primary block" id="btnBackHome">بازگشت به تمرین‌ها</button>
+      </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

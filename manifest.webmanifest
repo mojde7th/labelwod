@@ -1,0 +1,26 @@
+{
+  "name": "LabelWOD",
+  "short_name": "LabelWOD",
+  "description": "Tabata / interval timer with current and next move labels",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c1110",
+  "theme_color": "#0c1110",
+  "lang": "fa",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
