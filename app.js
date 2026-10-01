@@ -183,13 +183,11 @@
       if (!w) return;
       $("#defWork").value = w.defWork;
       $("#defRest").value = w.defRest;
-      $("#restAfterLast").value = w.restAfterLast ? "1" : "0";
-      seq = w.seq.map((s) => ({ ...s }));
+            seq = w.seq.map((s) => ({ ...s }));
     } else {
       $("#defWork").value = 40;
       $("#defRest").value = 20;
-      $("#restAfterLast").value = "0";
-    }
+          }
     renderPick();
     renderSeq();
     show("edit");
@@ -225,7 +223,7 @@
       const timing = document.createElement("div");
       timing.className = "timing";
       timing.innerHTML =
-        '<label class="lbl">کار (ث)<input type="number" min="5" max="600" data-k="work" value="' +
+        '<label class="lbl">تمرین (ث)<input type="number" min="5" max="600" data-k="work" value="' +
         s.work +
         '"/></label>' +
         '<label class="lbl">استراحت بعدش (ث)<input type="number" min="0" max="300" data-k="rest" value="' +
@@ -285,7 +283,7 @@
       name: "",
       defWork: Number($("#defWork").value) || 40,
       defRest: Number($("#defRest").value) || 0,
-      restAfterLast: $("#restAfterLast").value === "1",
+      restAfterLast: false,
       seq: seq.map((s) => ({
         moveId: s.moveId,
         name: s.name,
@@ -315,7 +313,7 @@
       });
       const isLast = i === w.seq.length - 1;
       const restSec = s.rest != null ? s.rest : w.defRest;
-      if (restSec > 0 && (!isLast || w.restAfterLast)) {
+      if (restSec > 0 && !isLast) {
         steps.push({
           kind: "rest",
           name: s.name,
@@ -380,7 +378,7 @@
     }
     const elapsed = Math.min(currentElapsed(), step.seconds);
     const phase = $("#phaseBadge");
-    phase.textContent = step.kind === "work" ? "کار" : "استراحت";
+    phase.textContent = step.kind === "work" ? "تمرین" : "استراحت";
     phase.className = "phase " + step.kind;
     $("#curMove").textContent = step.kind === "work" ? step.name : "استراحت";
     $("#nextMove").textContent = step.nextName ? "بعدی: " + step.nextName : "";
