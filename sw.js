@@ -1,9 +1,9 @@
-const CACHE = "mojdei-v13";
+const CACHE = "mojdei-v14";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=13",
-  "./app.js?v=13",
+  "./styles.css?v=14",
+  "./app.js?v=14",
   "./manifest.webmanifest",
   "./icon.svg",
   "./icon-180.png",

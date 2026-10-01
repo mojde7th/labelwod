@@ -28,8 +28,6 @@
   let seq = [];
   let run = null;
   let raf = 0;
-  let speakReady = false;
-  let audioCtx = null;
 
   const viewIds = ["home", "edit", "run", "done"];
 
@@ -72,133 +70,6 @@
     if (raw === "" || raw == null) return fallback;
     const n = Number(raw);
     return Number.isFinite(n) ? n : fallback;
-  }
-
-  function unlockAudio() {
-    try {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return;
-      if (!audioCtx) audioCtx = new AC();
-      if (audioCtx.state === "suspended") audioCtx.resume();
-    } catch {}
-    warmSpeech();
-    try {
-      if (window.speechSynthesis) {
-        speechSynthesis.getVoices();
-        const warm = new SpeechSynthesisUtterance(" ");
-        warm.volume = 0;
-        speechSynthesis.speak(warm);
-        speechSynthesis.cancel();
-      }
-    } catch {}
-  }
-
-  function beep(kind) {
-    try {
-      unlockAudio();
-      if (!audioCtx) return;
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.connect(g);
-      g.connect(audioCtx.destination);
-      o.frequency.value = kind === "rest" ? 440 : kind === "end" ? 660 : 880;
-      g.gain.value = 0.08;
-      o.start();
-      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.28);
-      o.stop(audioCtx.currentTime + 0.3);
-    } catch {}
-  }
-
-  function pickVoice() {
-    if (!window.speechSynthesis) return null;
-    const voices = speechSynthesis.getVoices() || [];
-    return (
-      voices.find((v) => /^fa(-|_|$)/i.test(v.lang)) ||
-      voices.find((v) => /persian|farsi|iran/i.test(v.name)) ||
-      voices.find((v) => /^ar(-|_|$)/i.test(v.lang)) ||
-      null
-    );
-  }
-
-  function faOnes(n) {
-    return ["صفر", "یک", "دو", "سه", "چهار", "پنج", "شش", "هفت", "هشت", "نه"][n] || String(n);
-  }
-  function faTeens(n) {
-    return [
-      "ده",
-      "یازده",
-      "دوازده",
-      "سیزده",
-      "چهارده",
-      "پانزده",
-      "شانزده",
-      "هفده",
-      "هجده",
-      "نوزده",
-    ][n - 10];
-  }
-  function faTens(n) {
-    return ["", "", "بیست", "سی", "چهل", "پنجاه", "شصت", "هفتاد", "هشتاد", "نود"][n];
-  }
-  function faHundreds(n) {
-    return ["", "صد", "دویست", "سیصد", "چهارصد", "پانصد", "ششصد", "هفتصد", "هشتصد", "نهصد"][n];
-  }
-  function toFaWords(n) {
-    n = Math.max(0, Math.round(Number(n) || 0));
-    if (n < 10) return faOnes(n);
-    if (n < 20) return faTeens(n);
-    if (n < 100) {
-      const t = Math.floor(n / 10);
-      const o = n % 10;
-      return o ? faTens(t) + " و " + faOnes(o) : faTens(t);
-    }
-    if (n < 1000) {
-      const h = Math.floor(n / 100);
-      const r = n % 100;
-      return r ? faHundreds(h) + " و " + toFaWords(r) : faHundreds(h);
-    }
-    return String(n);
-  }
-
-  function speakSeconds(n) {
-    unlockAudio();
-    const sec = Math.max(0, Math.round(n));
-    const phrase = toFaWords(sec) + " ثانیه";
-    if (!window.speechSynthesis) {
-      beep("work");
-      return;
-    }
-    try {
-      speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(phrase);
-      const voice = pickVoice();
-      if (voice) {
-        u.voice = voice;
-        u.lang = voice.lang || "fa-IR";
-      } else {
-        u.lang = "fa-IR";
-      }
-      u.rate = 0.88;
-      u.pitch = 1;
-      u.volume = 1;
-      u.onerror = function () {
-        beep("work");
-      };
-      speechSynthesis.speak(u);
-    } catch {
-      beep("work");
-    }
-  }
-
-  function warmSpeech() {
-    if (speakReady || !window.speechSynthesis) return;
-    speakReady = true;
-    try {
-      speechSynthesis.getVoices();
-      speechSynthesis.onvoiceschanged = function () {
-        speechSynthesis.getVoices();
-      };
-    } catch {}
   }
 
   function moveSeqTo(from, to) {
@@ -259,10 +130,7 @@
         const start = document.createElement("button");
         start.className = "btn primary sm";
         start.textContent = "شروع";
-        start.onclick = () => {
-          unlockAudio();
-          startRun(w.id);
-        };
+        start.onclick = () => startRun(w.id);
         const edit = document.createElement("button");
         edit.className = "btn sm";
         edit.textContent = "ویرایش";
@@ -452,34 +320,7 @@
     return steps;
   }
 
-  function markSpeakPlan(step) {
-    const total = step.seconds || 0;
-    // سه قسمت؛ دو بار اعلام: حدود یک‌سوم و دو‌سوم مسیر
-    const marks = [];
-    if (total >= 12) {
-      marks.push(Math.round(total / 3));
-      marks.push(Math.round((2 * total) / 3));
-    } else if (total >= 6) {
-      marks.push(Math.max(1, Math.floor(total / 2)));
-    }
-    return {
-      marks: marks.filter((m, i, a) => m > 0 && m < total && a.indexOf(m) === i),
-      spoken: {},
-    };
-  }
-
-  function maybeSpeak(remain, plan) {
-    if (!plan || !plan.marks) return;
-    plan.marks.forEach((m) => {
-      if (!plan.spoken[m] && remain <= m + 0.35 && remain >= m - 0.35) {
-        plan.spoken[m] = true;
-        speakSeconds(m);
-      }
-    });
-  }
-
   function startRun(id) {
-    unlockAudio();
     const w = state.wods.find((x) => x.id === id);
     if (!w || !w.seq.length) return;
     const steps = buildTimeline(w);
@@ -491,7 +332,6 @@
       pausedAt: null,
       pausedTotal: 0,
       playing: true,
-      speak: markSpeakPlan(steps[0]),
     };
     const bp = $("#btnPause");
     if (bp) bp.textContent = "توقف";
@@ -500,8 +340,6 @@
     show("run");
     cancelAnimationFrame(raf);
     tick();
-    beep("work");
-    if (steps[0]) speakSeconds(steps[0].seconds);
   }
 
   function renderRunQueue() {
@@ -558,7 +396,6 @@
       const p = step.seconds ? elapsed / step.seconds : 1;
       ring.style.strokeDashoffset = String(CIRC * (1 - Math.min(1, p)));
     }
-    maybeSpeak(remain, run.speak);
     if (force) renderRunQueue();
   }
 
@@ -572,10 +409,6 @@
       finishRun();
       return;
     }
-    const step = run.steps[run.i];
-    run.speak = markSpeakPlan(step);
-    beep(step.kind === "rest" ? "rest" : "work");
-    speakSeconds(step.seconds);
     paintRun(true);
   }
 
@@ -588,10 +421,6 @@
 
   function finishRun() {
     cancelAnimationFrame(raf);
-    try {
-      if (window.speechSynthesis) speechSynthesis.cancel();
-    } catch {}
-    beep("end");
     run = null;
     show("done");
   }
@@ -615,20 +444,11 @@
 
   function wire() {
     wireSteppers();
-    warmSpeech();
-    document.addEventListener(
-      "pointerdown",
-      function () {
-        unlockAudio();
-      },
-      { once: true, passive: true }
-    );
     const bindNew = (sel) => {
       const btn = $(sel);
       if (btn) {
         btn.onclick = function (e) {
           if (e) e.preventDefault();
-          unlockAudio();
           openEdit(null);
         };
       }
@@ -674,7 +494,6 @@
     if (moveForm) {
       moveForm.onsubmit = function (e) {
         e.preventDefault();
-        unlockAudio();
         const name = ($("#moveName") || {}).value;
         const n = (name || "").trim();
         if (!n) return;
@@ -709,9 +528,6 @@
           run.pausedAt = performance.now();
           btnPause.textContent = "ادامه";
           cancelAnimationFrame(raf);
-          try {
-            if (window.speechSynthesis) speechSynthesis.cancel();
-          } catch {}
         } else {
           run.pausedTotal += performance.now() - run.pausedAt;
           run.pausedAt = null;
@@ -741,9 +557,6 @@
       btnStop.onclick = function () {
         if (!confirm("قطع؟")) return;
         cancelAnimationFrame(raf);
-        try {
-          if (window.speechSynthesis) speechSynthesis.cancel();
-        } catch {}
         run = null;
         show("home");
         renderWods();
@@ -770,6 +583,6 @@
   show("home");
 
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js?v=13").catch(function () {});
+    navigator.serviceWorker.register("./sw.js?v=14").catch(function () {});
   }
 })();
