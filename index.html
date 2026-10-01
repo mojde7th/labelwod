@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <meta name="theme-color" content="#0c1110"/>
+  <meta name="theme-color" content="#07110e"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="Mojdei"/>
@@ -13,8 +13,8 @@
   <link rel="apple-touch-icon" href="icon-180.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="styles.css?v=10"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Vazirmatn:wght@500;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css?v=11"/>
   <style>
     .view{display:none!important}
     .view.on{display:block!important}
@@ -32,27 +32,44 @@
 
     <main>
       <section id="view-home" class="view on">
-        <button type="button" class="btn primary sm" id="btnNewWod">جدید</button>
-        <ul id="wodList" class="list"></ul>
+        <div id="homeEmpty" class="home-empty" hidden>
+          <button type="button" class="btn-hero" id="btnNewWodEmpty">جدید</button>
+        </div>
+        <div id="homeListWrap" class="home-list-wrap" hidden>
+          <button type="button" class="btn primary sm" id="btnNewWod">+ جدید</button>
+          <ul id="wodList" class="list"></ul>
+        </div>
       </section>
 
       <section id="view-edit" class="view">
         <div class="card">
-          <h3>زمان‌بندی</h3>
+          <h3>زمان‌بندی پیش‌فرض</h3>
           <div class="grid2">
-            <label class="lbl">تمرین (ثانیه)
-              <input id="defWork" type="number" min="5" max="600" value="40"/>
-            </label>
-            <label class="lbl">استراحت (ثانیه)
-              <input id="defRest" type="number" min="0" max="300" value="20"/>
-            </label>
+            <div class="stepper" data-for="defWork" data-min="5" data-max="600" data-step="5">
+              <span class="stepper-lbl">تمرین</span>
+              <div class="stepper-row">
+                <button type="button" class="stepper-btn" data-dir="-1">−</button>
+                <div class="stepper-val"><span id="defWorkVal">40</span><small>ث</small></div>
+                <button type="button" class="stepper-btn" data-dir="1">+</button>
+              </div>
+              <input id="defWork" type="hidden" value="40"/>
+            </div>
+            <div class="stepper" data-for="defRest" data-min="0" data-max="300" data-step="5">
+              <span class="stepper-lbl">استراحت</span>
+              <div class="stepper-row">
+                <button type="button" class="stepper-btn" data-dir="-1">−</button>
+                <div class="stepper-val"><span id="defRestVal">20</span><small>ث</small></div>
+                <button type="button" class="stepper-btn" data-dir="1">+</button>
+              </div>
+              <input id="defRest" type="hidden" value="20"/>
+            </div>
           </div>
         </div>
         <div class="card">
           <h3>حرکات این تمرین</h3>
           <form id="moveForm" class="row-form">
-            <input id="moveName" type="text" placeholder="نام حرکت جدید" required maxlength="60"/>
-            <button type="submit" class="btn primary sm">افزودن به تمرین</button>
+            <input id="moveName" type="text" placeholder="نام حرکت" required maxlength="60"/>
+            <button type="submit" class="btn primary sm">افزودن</button>
           </form>
           <div id="pickMoves" class="chips"></div>
           <ol id="seqList" class="seq"></ol>
@@ -68,16 +85,22 @@
           <span id="runProgress"></span>
         </div>
         <div id="phaseBadge" class="phase work">تمرین</div>
-        <h2 id="curMove" class="cur-move">—</h2>
-        <p id="nextMove" class="next-move">بعدی: —</p>
+        <div class="move-card now-card">
+          <div class="move-kicker">حرکت فعلی</div>
+          <h2 id="curMove" class="cur-move">—</h2>
+        </div>
+        <div class="move-card next-card" id="nextCard">
+          <div class="move-kicker">بعدی</div>
+          <p id="nextMove" class="next-move">—</p>
+        </div>
         <div class="clock-wrap">
           <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
             <circle cx="60" cy="60" r="54" class="ring-bg"/>
             <circle cx="60" cy="60" r="54" class="ring-fg" id="ringFg"/>
           </svg>
           <div class="clock">
-            <div id="elapsed" class="elapsed">0:00</div>
-            <div id="target" class="target">/ 0:40</div>
+            <div id="elapsed" class="elapsed">0:40</div>
+            <div id="target" class="target">باقی‌مانده</div>
           </div>
         </div>
         <div class="run-actions">
@@ -94,13 +117,19 @@
       </section>
     </main>
   </div>
-  <script src="app.js?v=10"></script>
+  <script src="app.js?v=11"></script>
   <script>
-    document.getElementById("btnNewWod").addEventListener("click", function () {
-      if (window.Mojdei && typeof window.Mojdei.newWod === "function") {
-        window.Mojdei.newWod();
-      }
-    });
+    function wireNew(id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener("click", function () {
+        if (window.Mojdei && typeof window.Mojdei.newWod === "function") {
+          window.Mojdei.newWod();
+        }
+      });
+    }
+    wireNew("btnNewWod");
+    wireNew("btnNewWodEmpty");
   </script>
 </body>
 </html>

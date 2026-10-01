@@ -10,7 +10,6 @@
       const cur = JSON.parse(localStorage.getItem(LS));
       if (cur) return cur;
     } catch {}
-    // مهاجرت از نسخه قبلی
     try {
       const old = JSON.parse(localStorage.getItem("labelwod-v1"));
       if (old) {
@@ -29,6 +28,7 @@
   let seq = [];
   let run = null;
   let raf = 0;
+  let speakReady = false;
 
   const viewIds = ["home", "edit", "run", "done"];
 
@@ -59,6 +59,17 @@
     return m + ":" + String(s).padStart(2, "0");
   }
 
+  function setStepper(id, value) {
+    const inp = $("#" + id);
+    const val = $("#" + id + "Val");
+    if (inp) inp.value = String(value);
+    if (val) val.textContent = String(value);
+  }
+
+  function getStepper(id, fallback) {
+    return Number(($("#" + id) || {}).value) || fallback;
+  }
+
   function beep(kind) {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -75,9 +86,45 @@
     } catch {}
   }
 
+  function pickVoice() {
+    if (!window.speechSynthesis) return null;
+    const voices = speechSynthesis.getVoices() || [];
+    const fa = voices.find((v) => /^fa/i.test(v.lang));
+    if (fa) return fa;
+    const soft = voices.find((v) => /female|zira|sara|aria|google/i.test(v.name));
+    return soft || voices[0] || null;
+  }
+
+  function speakSeconds(n) {
+    if (!window.speechSynthesis) return;
+    const sec = Math.max(0, Math.round(n));
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(String(sec));
+      const voice = pickVoice();
+      if (voice) u.voice = voice;
+      u.lang = (voice && voice.lang) || "fa-IR";
+      u.rate = 0.92;
+      u.pitch = 1.05;
+      u.volume = 1;
+      speechSynthesis.speak(u);
+    } catch {}
+  }
+
+  function warmSpeech() {
+    if (speakReady || !window.speechSynthesis) return;
+    speakReady = true;
+    try {
+      speechSynthesis.getVoices();
+      speechSynthesis.onvoiceschanged = function () {
+        speechSynthesis.getVoices();
+      };
+    } catch {}
+  }
+
   function addMoveToSeq(m) {
-    const work = Number(($("#defWork") || {}).value) || 40;
-    const rest = Number(($("#defRest") || {}).value) || 0;
+    const work = getStepper("defWork", 40);
+    const rest = getStepper("defRest", 0);
     seq.push({ moveId: m.id, name: m.name, work, rest });
     renderSeq();
   }
@@ -90,9 +137,15 @@
   }
 
   function renderWods() {
+    const empty = $("#homeEmpty");
+    const wrap = $("#homeListWrap");
     const ul = $("#wodList");
     if (!ul) return;
     ul.innerHTML = "";
+    const has = state.wods.length > 0;
+    if (empty) empty.hidden = has;
+    if (wrap) wrap.hidden = !has;
+    if (!has) return;
     state.wods
       .slice()
       .sort((a, b) => b.updated - a.updated)
@@ -139,16 +192,12 @@
     if (id) {
       const w = state.wods.find((x) => x.id === id);
       if (!w) return;
-      const dw = $("#defWork");
-      const dr = $("#defRest");
-      if (dw) dw.value = String(w.defWork);
-      if (dr) dr.value = String(w.defRest);
+      setStepper("defWork", w.defWork);
+      setStepper("defRest", w.defRest);
       seq = w.seq.map((s) => ({ ...s }));
     } else {
-      const dw = $("#defWork");
-      const dr = $("#defRest");
-      if (dw) dw.value = "40";
-      if (dr) dr.value = "20";
+      setStepper("defWork", 40);
+      setStepper("defRest", 20);
     }
     const moveInput = $("#moveName");
     if (moveInput) moveInput.value = "";
@@ -183,6 +232,42 @@
     });
   }
 
+  function makeMiniStepper(item, key, min, max, step) {
+    const wrap = document.createElement("div");
+    wrap.className = "stepper";
+    const lbl = document.createElement("span");
+    lbl.className = "stepper-lbl";
+    lbl.textContent = key === "work" ? "تمرین" : "استراحت";
+    const row = document.createElement("div");
+    row.className = "stepper-row";
+    const minus = document.createElement("button");
+    minus.type = "button";
+    minus.className = "stepper-btn";
+    minus.textContent = "−";
+    const val = document.createElement("div");
+    val.className = "stepper-val";
+    const num = document.createElement("span");
+    num.textContent = String(item[key]);
+    const unit = document.createElement("small");
+    unit.textContent = "ث";
+    val.append(num, unit);
+    const plus = document.createElement("button");
+    plus.type = "button";
+    plus.className = "stepper-btn";
+    plus.textContent = "+";
+    function apply(delta) {
+      let n = Number(item[key]) || 0;
+      n = Math.max(min, Math.min(max, n + delta * step));
+      item[key] = n;
+      num.textContent = String(n);
+    }
+    minus.onclick = () => apply(-1);
+    plus.onclick = () => apply(1);
+    row.append(minus, val, plus);
+    wrap.append(lbl, row);
+    return wrap;
+  }
+
   function renderSeq() {
     const ol = $("#seqList");
     if (!ol) return;
@@ -194,18 +279,7 @@
       name.textContent = s.name;
       const timing = document.createElement("div");
       timing.className = "timing";
-      timing.innerHTML =
-        '<label class="lbl">تمرین (ث)<input type="number" min="5" max="600" data-k="work" value="' +
-        s.work +
-        '"/></label>' +
-        '<label class="lbl">استراحت بعدش (ث)<input type="number" min="0" max="300" data-k="rest" value="' +
-        s.rest +
-        '"/></label>';
-      timing.querySelectorAll("input").forEach((inp) => {
-        inp.onchange = () => {
-          s[inp.dataset.k] = Number(inp.value) || 0;
-        };
-      });
+      timing.append(makeMiniStepper(s, "work", 5, 600, 5), makeMiniStepper(s, "rest", 0, 300, 5));
       const row = document.createElement("div");
       row.className = "row";
       const up = document.createElement("button");
@@ -271,17 +345,46 @@
     return steps;
   }
 
+  function markSpeakPlan(step) {
+    const total = step.seconds || 0;
+    // سه قسمت؛ دو بار اعلام: حدود یک‌سوم و دو‌سوم مسیر
+    const marks = [];
+    if (total >= 12) {
+      marks.push(Math.round(total / 3));
+      marks.push(Math.round((2 * total) / 3));
+    } else if (total >= 6) {
+      marks.push(Math.max(1, Math.floor(total / 2)));
+    }
+    return {
+      marks: marks.filter((m, i, a) => m > 0 && m < total && a.indexOf(m) === i),
+      spoken: {},
+    };
+  }
+
+  function maybeSpeak(remain, plan) {
+    if (!plan || !plan.marks) return;
+    plan.marks.forEach((m) => {
+      if (!plan.spoken[m] && remain <= m + 0.35 && remain >= m - 0.35) {
+        plan.spoken[m] = true;
+        speakSeconds(m);
+      }
+    });
+  }
+
   function startRun(id) {
+    warmSpeech();
     const w = state.wods.find((x) => x.id === id);
     if (!w || !w.seq.length) return;
+    const steps = buildTimeline(w);
     run = {
       wod: w,
-      steps: buildTimeline(w),
+      steps,
       i: 0,
       startedAt: performance.now(),
       pausedAt: null,
       pausedTotal: 0,
       playing: true,
+      speak: markSpeakPlan(steps[0]),
     };
     const bp = $("#btnPause");
     if (bp) bp.textContent = "توقف";
@@ -291,6 +394,7 @@
     cancelAnimationFrame(raf);
     tick();
     beep("work");
+    if (steps[0]) speakSeconds(steps[0].seconds);
   }
 
   function renderRunQueue() {
@@ -323,6 +427,7 @@
       return;
     }
     const elapsed = Math.min(currentElapsed(), step.seconds);
+    const remain = Math.max(0, step.seconds - elapsed);
     const phase = $("#phaseBadge");
     if (phase) {
       phase.textContent = step.kind === "work" ? "تمرین" : "استراحت";
@@ -331,19 +436,22 @@
     const cur = $("#curMove");
     if (cur) cur.textContent = step.kind === "work" ? step.name : "استراحت";
     const next = $("#nextMove");
-    if (next) next.textContent = step.nextName ? "بعدی: " + step.nextName : "";
+    const nextCard = $("#nextCard");
+    if (next) next.textContent = step.nextName || "پایان";
+    if (nextCard) nextCard.classList.toggle("is-empty", !step.nextName);
     const prog = $("#runProgress");
     if (prog) prog.textContent = step.index + 1 + " / " + step.total;
     const el = $("#elapsed");
-    if (el) el.textContent = fmt(elapsed);
+    if (el) el.textContent = fmt(remain);
     const tg = $("#target");
-    if (tg) tg.textContent = "/ " + fmt(step.seconds);
+    if (tg) tg.textContent = "باقی‌مانده از " + fmt(step.seconds);
     const ring = $("#ringFg");
     if (ring) {
       ring.classList.toggle("rest", step.kind === "rest");
       const p = step.seconds ? elapsed / step.seconds : 1;
       ring.style.strokeDashoffset = String(CIRC * (1 - Math.min(1, p)));
     }
+    maybeSpeak(remain, run.speak);
     if (force) renderRunQueue();
   }
 
@@ -357,7 +465,10 @@
       finishRun();
       return;
     }
-    beep(run.steps[run.i].kind === "rest" ? "rest" : "work");
+    const step = run.steps[run.i];
+    run.speak = markSpeakPlan(step);
+    beep(step.kind === "rest" ? "rest" : "work");
+    speakSeconds(step.seconds);
     paintRun(true);
   }
 
@@ -370,19 +481,45 @@
 
   function finishRun() {
     cancelAnimationFrame(raf);
+    try {
+      if (window.speechSynthesis) speechSynthesis.cancel();
+    } catch {}
     beep("end");
     run = null;
     show("done");
   }
 
+  function wireSteppers() {
+    $$(".stepper[data-for]").forEach((box) => {
+      const id = box.getAttribute("data-for");
+      const min = Number(box.getAttribute("data-min")) || 0;
+      const max = Number(box.getAttribute("data-max")) || 600;
+      const step = Number(box.getAttribute("data-step")) || 5;
+      box.querySelectorAll(".stepper-btn").forEach((btn) => {
+        btn.onclick = () => {
+          const dir = Number(btn.getAttribute("data-dir")) || 0;
+          let n = getStepper(id, min);
+          n = Math.max(min, Math.min(max, n + dir * step));
+          setStepper(id, n);
+        };
+      });
+    });
+  }
+
   function wire() {
-    const btnNew = $("#btnNewWod");
-    if (btnNew) {
-      btnNew.onclick = function (e) {
-        if (e) e.preventDefault();
-        openEdit(null);
-      };
-    }
+    wireSteppers();
+    warmSpeech();
+    const bindNew = (sel) => {
+      const btn = $(sel);
+      if (btn) {
+        btn.onclick = function (e) {
+          if (e) e.preventDefault();
+          openEdit(null);
+        };
+      }
+    };
+    bindNew("#btnNewWod");
+    bindNew("#btnNewWodEmpty");
     const btnCancel = $("#btnCancelEdit");
     if (btnCancel) {
       btnCancel.onclick = function () {
@@ -400,8 +537,8 @@
         const payload = {
           id: editId || uid(),
           name: "",
-          defWork: Number(($("#defWork") || {}).value) || 40,
-          defRest: Number(($("#defRest") || {}).value) || 0,
+          defWork: getStepper("defWork", 40),
+          defRest: getStepper("defRest", 0),
           restAfterLast: false,
           seq: seq.map((s) => ({
             moveId: s.moveId,
@@ -457,6 +594,9 @@
           run.pausedAt = performance.now();
           btnPause.textContent = "ادامه";
           cancelAnimationFrame(raf);
+          try {
+            if (window.speechSynthesis) speechSynthesis.cancel();
+          } catch {}
         } else {
           run.pausedTotal += performance.now() - run.pausedAt;
           run.pausedAt = null;
@@ -486,6 +626,9 @@
       btnStop.onclick = function () {
         if (!confirm("قطع؟")) return;
         cancelAnimationFrame(raf);
+        try {
+          if (window.speechSynthesis) speechSynthesis.cancel();
+        } catch {}
         run = null;
         show("home");
         renderWods();
@@ -512,6 +655,6 @@
   show("home");
 
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js?v=10").catch(function () {});
+    navigator.serviceWorker.register("./sw.js?v=11").catch(function () {});
   }
 })();
