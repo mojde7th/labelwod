@@ -1,8 +1,8 @@
 {
-  "name": "LabelWOD",
-  "short_name": "LabelWOD",
-  "description": "Tabata / interval timer with current and next move labels",
-  "start_url": "./",
+  "name": "Mojdei",
+  "short_name": "Mojdei",
+  "description": "Interval timer with move labels",
+  "start_url": "./?v=7",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

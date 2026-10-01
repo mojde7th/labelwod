@@ -28,7 +28,7 @@ html, body {
 .brand {
   font-family: "Bebas Neue", Impact, sans-serif;
   font-size: 34px;
-  letter-spacing: .04em;
+  letter-spacing: .06em;
   line-height: 1;
 }
 .brand span { color: var(--work); }

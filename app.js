@@ -1,5 +1,5 @@
 ﻿(() => {
-  const LS = "labelwod-v1";
+  const LS = "mojdei-v1";
   const CIRC = 2 * Math.PI * 54;
 
   const SEED = [
@@ -25,10 +25,18 @@
 
   function load() {
     try {
-      return JSON.parse(localStorage.getItem(LS)) || { moves: [], wods: [] };
-    } catch {
-      return { moves: [], wods: [] };
-    }
+      const cur = JSON.parse(localStorage.getItem(LS));
+      if (cur) return cur;
+    } catch {}
+    // مهاجرت از نسخه قبلی
+    try {
+      const old = JSON.parse(localStorage.getItem("labelwod-v1"));
+      if (old) {
+        localStorage.setItem(LS, JSON.stringify(old));
+        return old;
+      }
+    } catch {}
+    return { moves: [], wods: [] };
   }
   function save(st) {
     localStorage.setItem(LS, JSON.stringify(st));
@@ -40,19 +48,22 @@
   let run = null;
   let raf = 0;
 
-  const views = {
-    home: $("#view-home"),
-    moves: $("#view-moves"),
-    edit: $("#view-edit"),
-    run: $("#view-run"),
-    done: $("#view-done"),
-  };
+  const viewIds = ["home", "moves", "edit", "run", "done"];
 
   function show(name) {
-    Object.entries(views).forEach(([k, el]) => el.classList.toggle("on", k === name));
-    $$("#navTabs button").forEach((b) => b.classList.toggle("on", b.dataset.view === name));
-    $("#tabEdit").hidden = name !== "edit";
-    $("#topBar").style.display = name === "run" ? "none" : "";
+    viewIds.forEach((k) => {
+      const el = document.getElementById("view-" + k);
+      if (!el) return;
+      if (k === name) el.classList.add("on");
+      else el.classList.remove("on");
+    });
+    $$("#navTabs button").forEach((b) => {
+      b.classList.toggle("on", b.getAttribute("data-view") === name);
+    });
+    const tabEdit = document.getElementById("tabEdit");
+    if (tabEdit) tabEdit.hidden = name !== "edit";
+    const topBar = document.getElementById("topBar");
+    if (topBar) topBar.style.display = name === "run" ? "none" : "";
   }
 
   function uid() {
@@ -82,17 +93,28 @@
     } catch {}
   }
 
+  function ensureSeed() {
+    let added = false;
+    SEED.forEach((name) => {
+      if (!state.moves.some((m) => m.name === name)) {
+        state.moves.push({ id: uid(), name });
+        added = true;
+      }
+    });
+    if (added) save(state);
+  }
+
   function renderMoves() {
     const ul = $("#moveList");
+    if (!ul) return;
     ul.innerHTML = "";
-    if (!state.moves.length) return;
     state.moves.forEach((m) => {
       const li = document.createElement("li");
-      li.innerHTML = `<div><span class="title"></span></div><div class="ops"></div>`;
+      li.innerHTML = '<div><span class="title"></span></div><div class="ops"></div>';
       li.querySelector(".title").textContent = m.name;
       const del = document.createElement("button");
       del.type = "button";
-      del.className = "btn danger";
+      del.className = "btn danger sm";
       del.textContent = "حذف";
       del.onclick = () => {
         if (!confirm("حذف؟")) return;
@@ -106,34 +128,9 @@
     });
   }
 
-  $("#moveForm").onsubmit = (e) => {
-    e.preventDefault();
-    const name = $("#moveName").value.trim();
-    if (!name) return;
-    if (state.moves.some((m) => m.name === name)) {
-      alert("تکراری است");
-      return;
-    }
-    state.moves.push({ id: uid(), name });
-    save(state);
-    $("#moveName").value = "";
-    renderMoves();
-    renderPick();
-  };
-
-  $("#btnSeed").onclick = () => {
-    SEED.forEach((name) => {
-      if (!state.moves.some((m) => m.name === name)) {
-        state.moves.push({ id: uid(), name });
-      }
-    });
-    save(state);
-    renderMoves();
-    renderPick();
-  };
-
   function renderWods() {
     const ul = $("#wodList");
+    if (!ul) return;
     ul.innerHTML = "";
     state.wods
       .slice()
@@ -141,7 +138,7 @@
       .forEach((w) => {
         const li = document.createElement("li");
         const left = document.createElement("div");
-        left.innerHTML = `<span class="title"></span><span class="meta"></span>`;
+        left.innerHTML = '<span class="title"></span><span class="meta"></span>';
         const names = w.seq.map((s) => s.name);
         const title =
           names.length <= 3
@@ -153,15 +150,15 @@
         const ops = document.createElement("div");
         ops.className = "ops";
         const start = document.createElement("button");
-        start.className = "btn primary";
+        start.className = "btn primary sm";
         start.textContent = "شروع";
         start.onclick = () => startRun(w.id);
         const edit = document.createElement("button");
-        edit.className = "btn";
+        edit.className = "btn sm";
         edit.textContent = "ویرایش";
         edit.onclick = () => openEdit(w.id);
         const del = document.createElement("button");
-        del.className = "btn danger";
+        del.className = "btn danger sm";
         del.textContent = "حذف";
         del.onclick = () => {
           if (!confirm("حذف؟")) return;
@@ -178,15 +175,8 @@
   function openEdit(id) {
     editId = id || null;
     seq = [];
-    if (!state.moves.length) {
-      SEED.forEach((name) => {
-        if (!state.moves.some((m) => m.name === name)) {
-          state.moves.push({ id: uid(), name });
-        }
-      });
-      save(state);
-      renderMoves();
-    }
+    ensureSeed();
+    renderMoves();
     if (id) {
       const w = state.wods.find((x) => x.id === id);
       if (!w) return;
@@ -204,7 +194,9 @@
     renderPick();
     renderSeq();
     show("edit");
-    window.scrollTo(0, 0);
+    try {
+      window.scrollTo(0, 0);
+    } catch {}
   }
 
   function renderPick() {
@@ -228,6 +220,7 @@
 
   function renderSeq() {
     const ol = $("#seqList");
+    if (!ol) return;
     ol.innerHTML = "";
     seq.forEach((s, i) => {
       const li = document.createElement("li");
@@ -252,25 +245,29 @@
       row.className = "row";
       const up = document.createElement("button");
       up.type = "button";
-      up.className = "btn";
+      up.className = "btn sm";
       up.textContent = "بالا";
       up.disabled = i === 0;
       up.onclick = () => {
-        [seq[i - 1], seq[i]] = [seq[i], seq[i - 1]];
+        const tmp = seq[i - 1];
+        seq[i - 1] = seq[i];
+        seq[i] = tmp;
         renderSeq();
       };
       const down = document.createElement("button");
       down.type = "button";
-      down.className = "btn";
+      down.className = "btn sm";
       down.textContent = "پایین";
       down.disabled = i === seq.length - 1;
       down.onclick = () => {
-        [seq[i + 1], seq[i]] = [seq[i], seq[i + 1]];
+        const tmp = seq[i + 1];
+        seq[i + 1] = seq[i];
+        seq[i] = tmp;
         renderSeq();
       };
       const rm = document.createElement("button");
       rm.type = "button";
-      rm.className = "btn danger";
+      rm.className = "btn danger sm";
       rm.textContent = "حذف";
       rm.onclick = () => {
         seq.splice(i, 1);
@@ -279,50 +276,6 @@
       row.append(up, down, rm);
       li.append(name, timing, row);
       ol.append(li);
-    });
-  }
-
-  const btnNew = $("#btnNewWod");
-  if (btnNew) {
-    btnNew.addEventListener("click", (e) => {
-      e.preventDefault();
-      openEdit(null);
-    });
-  }
-  const btnCancel = $("#btnCancelEdit");
-  if (btnCancel) {
-    btnCancel.addEventListener("click", () => {
-      show("home");
-      renderWods();
-    });
-  }
-  const btnSave = $("#btnSaveWod");
-  if (btnSave) {
-    btnSave.addEventListener("click", () => {
-    if (!seq.length) {
-      alert("حداقل یک حرکت");
-      return;
-    }
-    const payload = {
-      id: editId || uid(),
-      name: "",
-      defWork: Number(($("#defWork") || {}).value) || 40,
-      defRest: Number(($("#defRest") || {}).value) || 0,
-      restAfterLast: false,
-      seq: seq.map((s) => ({
-        moveId: s.moveId,
-        name: s.name,
-        work: Number(s.work) || 40,
-        rest: Number(s.rest) || 0,
-      })),
-      updated: Date.now(),
-    };
-    const ix = state.wods.findIndex((w) => w.id === payload.id);
-    if (ix >= 0) state.wods[ix] = payload;
-    else state.wods.push(payload);
-    save(state);
-    show("home");
-    renderWods();
     });
   }
 
@@ -365,7 +318,8 @@
       pausedTotal: 0,
       playing: true,
     };
-    $("#btnPause").textContent = "توقف";
+    const bp = $("#btnPause");
+    if (bp) bp.textContent = "توقف";
     renderRunQueue();
     paintRun(true);
     show("run");
@@ -376,6 +330,7 @@
 
   function renderRunQueue() {
     const ol = $("#runQueue");
+    if (!ol || !run) return;
     ol.innerHTML = "";
     run.wod.seq.forEach((s, i) => {
       const li = document.createElement("li");
@@ -395,7 +350,7 @@
     return (now - run.startedAt - run.pausedTotal) / 1000;
   }
 
-  function paintRun(forceBeep) {
+  function paintRun(force) {
     if (!run) return;
     const step = run.steps[run.i];
     if (!step) {
@@ -404,21 +359,31 @@
     }
     const elapsed = Math.min(currentElapsed(), step.seconds);
     const phase = $("#phaseBadge");
-    phase.textContent = step.kind === "work" ? "تمرین" : "استراحت";
-    phase.className = "phase " + step.kind;
-    $("#curMove").textContent = step.kind === "work" ? step.name : "استراحت";
-    $("#nextMove").textContent = step.nextName ? "بعدی: " + step.nextName : "";
-    $("#runProgress").textContent = step.index + 1 + " / " + step.total;
-    $("#elapsed").textContent = fmt(elapsed);
-    $("#target").textContent = "/ " + fmt(step.seconds);
+    if (phase) {
+      phase.textContent = step.kind === "work" ? "تمرین" : "استراحت";
+      phase.className = "phase " + step.kind;
+    }
+    const cur = $("#curMove");
+    if (cur) cur.textContent = step.kind === "work" ? step.name : "استراحت";
+    const next = $("#nextMove");
+    if (next) next.textContent = step.nextName ? "بعدی: " + step.nextName : "";
+    const prog = $("#runProgress");
+    if (prog) prog.textContent = step.index + 1 + " / " + step.total;
+    const el = $("#elapsed");
+    if (el) el.textContent = fmt(elapsed);
+    const tg = $("#target");
+    if (tg) tg.textContent = "/ " + fmt(step.seconds);
     const ring = $("#ringFg");
-    ring.classList.toggle("rest", step.kind === "rest");
-    const p = step.seconds ? elapsed / step.seconds : 1;
-    ring.style.strokeDashoffset = String(CIRC * (1 - Math.min(1, p)));
-    if (forceBeep) renderRunQueue();
+    if (ring) {
+      ring.classList.toggle("rest", step.kind === "rest");
+      const p = step.seconds ? elapsed / step.seconds : 1;
+      ring.style.strokeDashoffset = String(CIRC * (1 - Math.min(1, p)));
+    }
+    if (force) renderRunQueue();
   }
 
   function advance() {
+    if (!run) return;
     run.i += 1;
     run.startedAt = performance.now();
     run.pausedTotal = 0;
@@ -433,13 +398,8 @@
 
   function tick() {
     if (!run || !run.playing) return;
-    const step = run.steps[run.i];
-    if (!step) {
-      finishRun();
-      return;
-    }
     paintRun(false);
-    if (currentElapsed() >= step.seconds) advance();
+    if (currentElapsed() >= run.steps[run.i].seconds) advance();
     raf = requestAnimationFrame(tick);
   }
 
@@ -450,62 +410,154 @@
     show("done");
   }
 
-  $("#btnPause").onclick = () => {
-    if (!run) return;
-    if (run.playing) {
-      run.playing = false;
-      run.pausedAt = performance.now();
-      $("#btnPause").textContent = "ادامه";
-      cancelAnimationFrame(raf);
-    } else {
-      run.pausedTotal += performance.now() - run.pausedAt;
-      run.pausedAt = null;
-      run.playing = true;
-      $("#btnPause").textContent = "توقف";
-      tick();
+  function wire() {
+    const btnNew = $("#btnNewWod");
+    if (btnNew) {
+      btnNew.onclick = function (e) {
+        if (e) e.preventDefault();
+        openEdit(null);
+      };
     }
-  };
-
-  $("#btnSkip").onclick = () => {
-    if (!run) return;
-    if (!run.playing) {
-      run.pausedTotal += performance.now() - run.pausedAt;
-      run.pausedAt = null;
-      run.playing = true;
-      $("#btnPause").textContent = "توقف";
+    const btnCancel = $("#btnCancelEdit");
+    if (btnCancel) {
+      btnCancel.onclick = function () {
+        show("home");
+        renderWods();
+      };
     }
-    advance();
-    cancelAnimationFrame(raf);
-    tick();
-  };
-
-  $("#btnStop").onclick = () => {
-    if (!confirm("قطع؟")) return;
-    cancelAnimationFrame(raf);
-    run = null;
-    show("home");
-    renderWods();
-  };
-
-  $("#btnBackHome").onclick = () => {
-    show("home");
-    renderWods();
-  };
-
-  $$("#navTabs button").forEach((b) => {
-    b.onclick = () => {
-      if (b.dataset.view === "edit") return;
-      show(b.dataset.view);
-      if (b.dataset.view === "home") renderWods();
-      if (b.dataset.view === "moves") renderMoves();
-    };
-  });
-
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js").catch(() => {});
+    const btnSave = $("#btnSaveWod");
+    if (btnSave) {
+      btnSave.onclick = function () {
+        if (!seq.length) {
+          alert("حداقل یک حرکت");
+          return;
+        }
+        const payload = {
+          id: editId || uid(),
+          name: "",
+          defWork: Number(($("#defWork") || {}).value) || 40,
+          defRest: Number(($("#defRest") || {}).value) || 0,
+          restAfterLast: false,
+          seq: seq.map((s) => ({
+            moveId: s.moveId,
+            name: s.name,
+            work: Number(s.work) || 40,
+            rest: Number(s.rest) || 0,
+          })),
+          updated: Date.now(),
+        };
+        const ix = state.wods.findIndex((w) => w.id === payload.id);
+        if (ix >= 0) state.wods[ix] = payload;
+        else state.wods.push(payload);
+        save(state);
+        show("home");
+        renderWods();
+      };
+    }
+    const btnSeed = $("#btnSeed");
+    if (btnSeed) {
+      btnSeed.onclick = function () {
+        ensureSeed();
+        renderMoves();
+        renderPick();
+      };
+    }
+    const moveForm = $("#moveForm");
+    if (moveForm) {
+      moveForm.onsubmit = function (e) {
+        e.preventDefault();
+        const name = ($("#moveName") || {}).value;
+        const n = (name || "").trim();
+        if (!n) return;
+        if (state.moves.some((m) => m.name === n)) {
+          alert("تکراری است");
+          return;
+        }
+        state.moves.push({ id: uid(), name: n });
+        save(state);
+        $("#moveName").value = "";
+        renderMoves();
+        renderPick();
+      };
+    }
+    $$("#navTabs button").forEach((b) => {
+      b.onclick = function () {
+        const v = b.getAttribute("data-view");
+        if (v === "edit") return;
+        show(v);
+        if (v === "home") renderWods();
+        if (v === "moves") {
+          ensureSeed();
+          renderMoves();
+        }
+      };
+    });
+    const btnPause = $("#btnPause");
+    if (btnPause) {
+      btnPause.onclick = function () {
+        if (!run) return;
+        if (run.playing) {
+          run.playing = false;
+          run.pausedAt = performance.now();
+          btnPause.textContent = "ادامه";
+          cancelAnimationFrame(raf);
+        } else {
+          run.pausedTotal += performance.now() - run.pausedAt;
+          run.pausedAt = null;
+          run.playing = true;
+          btnPause.textContent = "توقف";
+          tick();
+        }
+      };
+    }
+    const btnSkip = $("#btnSkip");
+    if (btnSkip) {
+      btnSkip.onclick = function () {
+        if (!run) return;
+        if (!run.playing) {
+          run.pausedTotal += performance.now() - run.pausedAt;
+          run.pausedAt = null;
+          run.playing = true;
+          if (btnPause) btnPause.textContent = "توقف";
+        }
+        advance();
+        cancelAnimationFrame(raf);
+        tick();
+      };
+    }
+    const btnStop = $("#btnStop");
+    if (btnStop) {
+      btnStop.onclick = function () {
+        if (!confirm("قطع؟")) return;
+        cancelAnimationFrame(raf);
+        run = null;
+        show("home");
+        renderWods();
+      };
+    }
+    const btnBack = $("#btnBackHome");
+    if (btnBack) {
+      btnBack.onclick = function () {
+        show("home");
+        renderWods();
+      };
+    }
   }
 
+  window.Mojdei = {
+    newWod: function () {
+      openEdit(null);
+    },
+    show: show,
+  };
+
+  ensureSeed();
+  wire();
   renderMoves();
   renderWods();
   show("home");
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js?v=7").catch(function () {});
+  }
 })();

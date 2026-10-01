@@ -6,45 +6,46 @@
   <meta name="theme-color" content="#0c1110"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <meta name="apple-mobile-web-app-title" content="LabelWOD"/>
-  <title>LabelWOD</title>
+  <meta name="apple-mobile-web-app-title" content="Mojdei"/>
+  <title>Mojdei</title>
   <link rel="manifest" href="manifest.webmanifest"/>
   <link rel="icon" href="icon.svg" type="image/svg+xml"/>
   <link rel="apple-touch-icon" href="icon-180.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="styles.css"/>
+  <link rel="stylesheet" href="styles.css?v=7"/>
+  <style>
+    .view{display:none!important}
+    .view.on{display:block!important}
+  </style>
 </head>
 <body>
   <div id="app">
     <header class="top" id="topBar">
-      <div class="brand">Label<span>WOD</span></div>
+      <div class="brand">Moj<span>dei</span></div>
       <nav class="tabs" id="navTabs">
-        <button type="button" data-view="home" class="on">تمرین‌ها</button>
-        <button type="button" data-view="moves">حرکات</button>
+        <button type="button" data-view="home" class="on" id="navHome">تمرین‌ها</button>
+        <button type="button" data-view="moves" id="navMoves">حرکات</button>
         <button type="button" data-view="edit" id="tabEdit" hidden>ویرایش</button>
       </nav>
     </header>
 
     <main>
-      <!-- HOME -->
       <section id="view-home" class="view on">
         <button type="button" class="btn primary sm" id="btnNewWod">جدید</button>
         <ul id="wodList" class="list"></ul>
       </section>
 
-      <!-- MOVES LIBRARY -->
       <section id="view-moves" class="view">
         <form id="moveForm" class="row-form">
           <input id="moveName" type="text" placeholder="نام حرکت" required maxlength="60"/>
-          <button type="submit" class="btn primary">افزودن</button>
+          <button type="submit" class="btn primary sm">افزودن</button>
         </form>
         <button type="button" class="btn ghost sm" id="btnSeed">پیش‌فرض</button>
         <ul id="moveList" class="list"></ul>
       </section>
 
-      <!-- EDIT WORKOUT -->
       <section id="view-edit" class="view">
         <div class="card">
           <h3>زمان‌بندی</h3>
@@ -57,20 +58,17 @@
             </label>
           </div>
         </div>
-
         <div class="card">
           <h3>حرکات</h3>
           <div id="pickMoves" class="chips"></div>
           <ol id="seqList" class="seq"></ol>
         </div>
-
         <div class="actions">
           <button type="button" class="btn primary block sm" id="btnSaveWod">ذخیره</button>
           <button type="button" class="btn ghost block sm" id="btnCancelEdit">انصراف</button>
         </div>
       </section>
 
-      <!-- RUN -->
       <section id="view-run" class="view run">
         <div class="run-meta">
           <span id="runProgress"></span>
@@ -78,7 +76,6 @@
         <div id="phaseBadge" class="phase work">تمرین</div>
         <h2 id="curMove" class="cur-move">—</h2>
         <p id="nextMove" class="next-move">بعدی: —</p>
-
         <div class="clock-wrap">
           <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
             <circle cx="60" cy="60" r="54" class="ring-bg"/>
@@ -89,7 +86,6 @@
             <div id="target" class="target">/ 0:40</div>
           </div>
         </div>
-
         <div class="run-actions">
           <button type="button" class="btn big" id="btnPause">توقف</button>
           <button type="button" class="btn big primary" id="btnSkip">بعدی</button>
@@ -98,13 +94,20 @@
         <ol id="runQueue" class="run-queue"></ol>
       </section>
 
-      <!-- DONE -->
       <section id="view-done" class="view">
         <h2 class="done-title">تمام شد</h2>
-        <button type="button" class="btn primary block" id="btnBackHome">بازگشت</button>
+        <button type="button" class="btn primary block sm" id="btnBackHome">بازگشت</button>
       </section>
     </main>
   </div>
-  <script src="app.js"></script>
+  <script src="app.js?v=7"></script>
+  <script>
+    // پشتیبان اگر اسکریپت اصلی دیر لود شد
+    document.getElementById("btnNewWod").addEventListener("click", function () {
+      if (window.Mojdei && typeof window.Mojdei.newWod === "function") {
+        window.Mojdei.newWod();
+      }
+    });
+  </script>
 </body>
 </html>

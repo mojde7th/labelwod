@@ -1,16 +1,18 @@
-const CACHE = "labelwod-v6";
+const CACHE = "mojdei-v7";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css",
-  "./app.js",
+  "./styles.css?v=7",
+  "./app.js?v=7",
   "./manifest.webmanifest",
   "./icon.svg",
   "./icon-180.png",
 ];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches.open(CACHE).then((c) => c.addAll(["./", "./index.html", "./styles.css", "./app.js", "./manifest.webmanifest", "./icon.svg", "./icon-180.png"])).then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", (e) => {
@@ -23,28 +25,13 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   const req = e.request;
-  if (req.mode === "navigate" || (req.headers.get("accept") || "").includes("text/html")) {
-    e.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
-          return res;
-        })
-        .catch(() => caches.match(req).then((c) => c || caches.match("./index.html")))
-    );
-    return;
-  }
   e.respondWith(
-    caches.match(req).then((cached) => {
-      const fetched = fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
-          return res;
-        })
-        .catch(() => cached);
-      return cached || fetched;
-    })
+    fetch(req)
+      .then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(req, copy));
+        return res;
+      })
+      .catch(() => caches.match(req).then((c) => c || caches.match("./index.html")))
   );
 });
