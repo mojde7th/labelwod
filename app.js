@@ -3,21 +3,21 @@
   const CIRC = 2 * Math.PI * 54;
 
   const SEED = [
-    "Ø§Ø³Ú©ÙˆØ§Øª Ø¬Ø§Ù…Ù¾",
-    "Ø¨Ø±Ù¾ÛŒ",
-    "Ø´Ù†Ø§ Ø³ÙˆØ¦Ø¯ÛŒ",
-    "Ù„Ø§Ù†Ú¯Ø² Ù…ØªÙ†Ø§ÙˆØ¨",
-    "Ù¾Ù„Ø§Ù†Ú©",
-    "Ú©Ø±Ø§Ù†Ú†",
-    "Ú©ÙˆÙ‡Ù†ÙˆØ±Ø¯",
-    "Ø¬Ø§Ù…Ù¾ÛŒÙ†Ú¯ Ø¬Ú©",
-    "Ù†Ø´Ø± Ø¬Ø§Ù†Ø¨",
-    "Ø§Ø³Ú©ÙˆØ§Øª Ù‡ÙˆØ§ÛŒÛŒ",
-    "Ø¯ÛŒÙˆØ§Ø±Ù†Ø´ÛŒÙ†ÛŒ",
-    "Ø­Ø±Ú©Øª Ù¾Ø±ÙˆØ§Ù†Ù‡",
-    "Ú©Ø´Ø´ Ù‡Ù…Ø³ØªØ±ÛŒÙ†Ú¯",
-    "Ú©ØªÙ„â€ŒØ¨Ù„ Ø³ÙˆØ¦ÛŒÙ†Ú¯",
-    "Ø±ÙˆØ¦ÛŒÙ†Ú¯",
+    "اسکوات جامپ",
+    "برپی",
+    "شنا سوئدی",
+    "لانگز متناوب",
+    "پلانک",
+    "کرانچ",
+    "کوهنورد",
+    "جامپینگ جک",
+    "نشر جانب",
+    "اسکوات هوایی",
+    "دیوارنشینی",
+    "حرکت پروانه",
+    "کشش همسترینگ",
+    "کتل‌بل سوئینگ",
+    "روئینگ",
   ];
 
   const $ = (s, r = document) => r.querySelector(s);
@@ -36,7 +36,7 @@
 
   let state = load();
   let editId = null;
-  let seq = []; // {moveId, name, work, rest} rest null = use default
+  let seq = [];
   let run = null;
   let raf = 0;
 
@@ -82,7 +82,6 @@
     } catch {}
   }
 
-  /* -------- Moves -------- */
   function renderMoves() {
     const ul = $("#moveList");
     ul.innerHTML = "";
@@ -94,9 +93,9 @@
       const del = document.createElement("button");
       del.type = "button";
       del.className = "btn danger";
-      del.textContent = "Ø­Ø°Ù";
+      del.textContent = "حذف";
       del.onclick = () => {
-        if (!confirm("Ø­Ø°Ù Ø§ÛŒÙ† Ø­Ø±Ú©ØªØŸ")) return;
+        if (!confirm("حذف؟")) return;
         state.moves = state.moves.filter((x) => x.id !== m.id);
         save(state);
         renderMoves();
@@ -112,7 +111,7 @@
     const name = $("#moveName").value.trim();
     if (!name) return;
     if (state.moves.some((m) => m.name === name)) {
-      alert("Ø§ÛŒÙ† Ù†Ø§Ù… Ø§Ø² Ù‚Ø¨Ù„ Ù‡Ø³Øª");
+      alert("تکراری است");
       return;
     }
     state.moves.push({ id: uid(), name });
@@ -133,7 +132,6 @@
     renderPick();
   };
 
-  /* -------- WOD list -------- */
   function renderWods() {
     const ul = $("#wodList");
     ul.innerHTML = "";
@@ -147,26 +145,26 @@
         const names = w.seq.map((s) => s.name);
         const title =
           names.length <= 3
-            ? names.join(" Â· ")
-            : names.slice(0, 3).join(" Â· ") + " +" + (names.length - 3);
-        left.querySelector(".title").textContent = title || "ØªÙ…Ø±ÛŒÙ†";
+            ? names.join(" · ")
+            : names.slice(0, 3).join(" · ") + " +" + (names.length - 3);
+        left.querySelector(".title").textContent = title || "—";
         left.querySelector(".meta").textContent =
-          w.seq.length + " Ø­Ø±Ú©Øª Â· " + w.defWork + "Ø« / " + w.defRest + "Ø«";
+          w.seq.length + " حرکت · " + w.defWork + "ث / " + w.defRest + "ث";
         const ops = document.createElement("div");
         ops.className = "ops";
         const start = document.createElement("button");
         start.className = "btn primary";
-        start.textContent = "Ø´Ø±ÙˆØ¹";
+        start.textContent = "شروع";
         start.onclick = () => startRun(w.id);
         const edit = document.createElement("button");
         edit.className = "btn";
-        edit.textContent = "ÙˆÛŒØ±Ø§ÛŒØ´";
+        edit.textContent = "ویرایش";
         edit.onclick = () => openEdit(w.id);
         const del = document.createElement("button");
         del.className = "btn danger";
-        del.textContent = "Ø­Ø°Ù";
+        del.textContent = "حذف";
         del.onclick = () => {
-          if (!confirm("Ø­Ø°ÙØŸ")) return;
+          if (!confirm("حذف؟")) return;
           state.wods = state.wods.filter((x) => x.id !== w.id);
           save(state);
           renderWods();
@@ -177,7 +175,6 @@
       });
   }
 
-  /* -------- Edit -------- */
   function openEdit(id) {
     editId = id || null;
     seq = [];
@@ -227,13 +224,13 @@
       name.textContent = s.name;
       const timing = document.createElement("div");
       timing.className = "timing";
-      timing.innerHTML = `
-        <label class="lbl">Ú©Ø§Ø± (Ø«)
-          <input type="number" min="5" max="600" data-k="work" value="${s.work}"/>
-        </label>
-        <label class="lbl">Ø§Ø³ØªØ±Ø§Ø­Øª Ø¨Ø¹Ø¯Ø´ (Ø«)
-          <input type="number" min="0" max="300" data-k="rest" value="${s.rest}"/>
-        </label>`;
+      timing.innerHTML =
+        '<label class="lbl">کار (ث)<input type="number" min="5" max="600" data-k="work" value="' +
+        s.work +
+        '"/></label>' +
+        '<label class="lbl">استراحت بعدش (ث)<input type="number" min="0" max="300" data-k="rest" value="' +
+        s.rest +
+        '"/></label>';
       timing.querySelectorAll("input").forEach((inp) => {
         inp.onchange = () => {
           s[inp.dataset.k] = Number(inp.value) || 0;
@@ -244,7 +241,7 @@
       const up = document.createElement("button");
       up.type = "button";
       up.className = "btn";
-      up.textContent = "Ø¨Ø§Ù„Ø§";
+      up.textContent = "بالا";
       up.disabled = i === 0;
       up.onclick = () => {
         [seq[i - 1], seq[i]] = [seq[i], seq[i - 1]];
@@ -253,7 +250,7 @@
       const down = document.createElement("button");
       down.type = "button";
       down.className = "btn";
-      down.textContent = "Ù¾Ø§ÛŒÛŒÙ†";
+      down.textContent = "پایین";
       down.disabled = i === seq.length - 1;
       down.onclick = () => {
         [seq[i + 1], seq[i]] = [seq[i], seq[i + 1]];
@@ -262,7 +259,7 @@
       const rm = document.createElement("button");
       rm.type = "button";
       rm.className = "btn danger";
-      rm.textContent = "Ø­Ø°Ù Ø§Ø² Ù„ÛŒØ³Øª";
+      rm.textContent = "حذف";
       rm.onclick = () => {
         seq.splice(i, 1);
         renderSeq();
@@ -280,7 +277,7 @@
   };
   $("#btnSaveWod").onclick = () => {
     if (!seq.length) {
-      alert("Ø­Ø¯Ø§Ù‚Ù„ ÛŒÚ© Ø­Ø±Ú©Øª");
+      alert("حداقل یک حرکت");
       return;
     }
     const payload = {
@@ -305,7 +302,6 @@
     renderWods();
   };
 
-  /* -------- Runner -------- */
   function buildTimeline(w) {
     const steps = [];
     w.seq.forEach((s, i) => {
@@ -336,16 +332,16 @@
   function startRun(id) {
     const w = state.wods.find((x) => x.id === id);
     if (!w || !w.seq.length) return;
-    const steps = buildTimeline(w);
     run = {
       wod: w,
-      steps,
+      steps: buildTimeline(w),
       i: 0,
       startedAt: performance.now(),
       pausedAt: null,
       pausedTotal: 0,
       playing: true,
     };
+    $("#btnPause").textContent = "توقف";
     renderRunQueue();
     paintRun(true);
     show("run");
@@ -362,9 +358,9 @@
       const step = run.steps[run.i];
       if (step && i < step.index) li.className = "done";
       if (step && i === step.index) li.className = "now";
-      li.innerHTML = `<span></span><span></span>`;
+      li.innerHTML = "<span></span><span></span>";
       li.children[0].textContent = i + 1 + ". " + s.name;
-      li.children[1].textContent = s.work + "Ø« / Ø§Ø³ØªØ±Ø§Ø­Øª " + s.rest + "Ø«";
+      li.children[1].textContent = s.work + "ث / " + s.rest + "ث";
       ol.append(li);
     });
   }
@@ -384,21 +380,11 @@
     }
     const elapsed = Math.min(currentElapsed(), step.seconds);
     const phase = $("#phaseBadge");
-    phase.textContent = step.kind === "work" ? "Ú©Ø§Ø±" : "Ø§Ø³ØªØ±Ø§Ø­Øª";
+    phase.textContent = step.kind === "work" ? "کار" : "استراحت";
     phase.className = "phase " + step.kind;
-    $("#curMove").textContent =
-      step.kind === "work" ? step.name : "Ø§Ø³ØªØ±Ø§Ø­Øª";
-    if (step.kind === "rest" && step.nextName) {
-      $("#nextMove").textContent = "Ø­Ø±Ú©Øª Ø¨Ø¹Ø¯ÛŒ: " + step.nextName;
-    } else if (step.kind === "work" && step.nextName) {
-      $("#nextMove").textContent = "Ø¨Ø¹Ø¯ÛŒ: " + step.nextName;
-    } else if (step.kind === "work") {
-      $("#nextMove").textContent = "Ø¢Ø®Ø±ÛŒÙ† Ø­Ø±Ú©Øª";
-    } else {
-      $("#nextMove").textContent = "Ù¾Ø§ÛŒØ§Ù† Ù†Ø²Ø¯ÛŒÚ© Ø§Ø³Øª";
-    }
-    $("#runProgress").textContent =
-      "Ø­Ø±Ú©Øª " + (step.index + 1) + " Ø§Ø² " + step.total;
+    $("#curMove").textContent = step.kind === "work" ? step.name : "استراحت";
+    $("#nextMove").textContent = step.nextName ? "بعدی: " + step.nextName : "";
+    $("#runProgress").textContent = step.index + 1 + " / " + step.total;
     $("#elapsed").textContent = fmt(elapsed);
     $("#target").textContent = "/ " + fmt(step.seconds);
     const ring = $("#ringFg");
@@ -429,9 +415,7 @@
       return;
     }
     paintRun(false);
-    if (currentElapsed() >= step.seconds) {
-      advance();
-    }
+    if (currentElapsed() >= step.seconds) advance();
     raf = requestAnimationFrame(tick);
   }
 
@@ -447,13 +431,13 @@
     if (run.playing) {
       run.playing = false;
       run.pausedAt = performance.now();
-      $("#btnPause").textContent = "Ø§Ø¯Ø§Ù…Ù‡";
+      $("#btnPause").textContent = "ادامه";
       cancelAnimationFrame(raf);
     } else {
       run.pausedTotal += performance.now() - run.pausedAt;
       run.pausedAt = null;
       run.playing = true;
-      $("#btnPause").textContent = "ØªÙˆÙ‚Ù";
+      $("#btnPause").textContent = "توقف";
       tick();
     }
   };
@@ -464,7 +448,7 @@
       run.pausedTotal += performance.now() - run.pausedAt;
       run.pausedAt = null;
       run.playing = true;
-      $("#btnPause").textContent = "ØªÙˆÙ‚Ù";
+      $("#btnPause").textContent = "توقف";
     }
     advance();
     cancelAnimationFrame(raf);
@@ -472,7 +456,7 @@
   };
 
   $("#btnStop").onclick = () => {
-    if (!confirm("ØªÙ…Ø±ÛŒÙ† Ù‚Ø·Ø¹ Ø´ÙˆØ¯ØŸ")) return;
+    if (!confirm("قطع؟")) return;
     cancelAnimationFrame(raf);
     run = null;
     show("home");
@@ -484,7 +468,6 @@
     renderWods();
   };
 
-  /* -------- Nav -------- */
   $$("#navTabs button").forEach((b) => {
     b.onclick = () => {
       if (b.dataset.view === "edit") return;
@@ -494,7 +477,6 @@
     };
   });
 
-  /* -------- PWA -------- */
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./sw.js").catch(() => {});
   }
