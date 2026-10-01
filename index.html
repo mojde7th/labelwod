@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="styles.css?v=9"/>
+  <link rel="stylesheet" href="styles.css?v=10"/>
   <style>
     .view{display:none!important}
     .view.on{display:block!important}
@@ -54,7 +54,6 @@
             <input id="moveName" type="text" placeholder="نام حرکت جدید" required maxlength="60"/>
             <button type="submit" class="btn primary sm">افزودن به تمرین</button>
           </form>
-          <p class="hint">نام را بنویس و بزن؛ همان لحظه به همین تمرین اضافه می‌شود. برای دوباره استفاده، از دکمه‌های زیر بزن.</p>
           <div id="pickMoves" class="chips"></div>
           <ol id="seqList" class="seq"></ol>
         </div>
@@ -95,7 +94,7 @@
       </section>
     </main>
   </div>
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
   <script>
     document.getElementById("btnNewWod").addEventListener("click", function () {
       if (window.Mojdei && typeof window.Mojdei.newWod === "function") {

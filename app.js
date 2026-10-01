@@ -512,6 +512,6 @@
   show("home");
 
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js?v=9").catch(function () {});
+    navigator.serviceWorker.register("./sw.js?v=10").catch(function () {});
   }
 })();
