@@ -29,6 +29,7 @@
   let run = null;
   let raf = 0;
   let speakReady = false;
+  let audioCtx = null;
 
   const viewIds = ["home", "edit", "run", "done"];
 
@@ -67,33 +68,56 @@
   }
 
   function getStepper(id, fallback) {
-    return Number(($("#" + id) || {}).value) || fallback;
+    const raw = ($("#" + id) || {}).value;
+    if (raw === "" || raw == null) return fallback;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : fallback;
+  }
+
+  function unlockAudio() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!audioCtx) audioCtx = new AC();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+    } catch {}
+    warmSpeech();
+    try {
+      if (window.speechSynthesis) {
+        speechSynthesis.getVoices();
+        const warm = new SpeechSynthesisUtterance(" ");
+        warm.volume = 0;
+        speechSynthesis.speak(warm);
+        speechSynthesis.cancel();
+      }
+    } catch {}
   }
 
   function beep(kind) {
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
+      unlockAudio();
+      if (!audioCtx) return;
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
       o.connect(g);
-      g.connect(ctx.destination);
+      g.connect(audioCtx.destination);
       o.frequency.value = kind === "rest" ? 440 : kind === "end" ? 660 : 880;
-      g.gain.value = 0.05;
+      g.gain.value = 0.08;
       o.start();
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
-      o.stop(ctx.currentTime + 0.26);
-      setTimeout(() => ctx.close(), 400);
+      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.28);
+      o.stop(audioCtx.currentTime + 0.3);
     } catch {}
   }
 
   function pickVoice() {
     if (!window.speechSynthesis) return null;
     const voices = speechSynthesis.getVoices() || [];
-    const fa =
+    return (
       voices.find((v) => /^fa(-|_|$)/i.test(v.lang)) ||
-      voices.find((v) => /persian|farsi|iran/i.test(v.name));
-    if (fa) return fa;
-    return null;
+      voices.find((v) => /persian|farsi|iran/i.test(v.name)) ||
+      voices.find((v) => /^ar(-|_|$)/i.test(v.lang)) ||
+      null
+    );
   }
 
   function faOnes(n) {
@@ -137,9 +161,13 @@
   }
 
   function speakSeconds(n) {
-    if (!window.speechSynthesis) return;
+    unlockAudio();
     const sec = Math.max(0, Math.round(n));
     const phrase = toFaWords(sec) + " ثانیه";
+    if (!window.speechSynthesis) {
+      beep("work");
+      return;
+    }
     try {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(phrase);
@@ -150,11 +178,16 @@
       } else {
         u.lang = "fa-IR";
       }
-      u.rate = 0.9;
+      u.rate = 0.88;
       u.pitch = 1;
       u.volume = 1;
+      u.onerror = function () {
+        beep("work");
+      };
       speechSynthesis.speak(u);
-    } catch {}
+    } catch {
+      beep("work");
+    }
   }
 
   function warmSpeech() {
@@ -168,11 +201,27 @@
     } catch {}
   }
 
+  function moveSeqTo(from, to) {
+    if (from === to || from < 0 || to < 0 || from >= seq.length) return;
+    to = Math.max(0, Math.min(seq.length - 1, to));
+    const item = seq.splice(from, 1)[0];
+    seq.splice(to, 0, item);
+  }
+
   function addMoveToSeq(m) {
     const work = getStepper("defWork", 40);
     const rest = getStepper("defRest", 0);
     seq.push({ moveId: m.id, name: m.name, work, rest });
     renderSeq();
+    const ol = $("#seqList");
+    if (ol && ol.lastElementChild) {
+      const li = ol.lastElementChild;
+      li.classList.add("flash");
+      try {
+        li.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      } catch {}
+      setTimeout(() => li.classList.remove("flash"), 1200);
+    }
   }
 
   function removeMove(id) {
@@ -210,7 +259,10 @@
         const start = document.createElement("button");
         start.className = "btn primary sm";
         start.textContent = "شروع";
-        start.onclick = () => startRun(w.id);
+        start.onclick = () => {
+          unlockAudio();
+          startRun(w.id);
+        };
         const edit = document.createElement("button");
         edit.className = "btn sm";
         edit.textContent = "ویرایش";
@@ -318,9 +370,24 @@
     ol.innerHTML = "";
     seq.forEach((s, i) => {
       const li = document.createElement("li");
+      const head = document.createElement("div");
+      head.className = "head";
+      const ord = document.createElement("input");
+      ord.className = "ord";
+      ord.type = "number";
+      ord.min = "1";
+      ord.max = String(seq.length);
+      ord.value = String(i + 1);
+      ord.title = "شماره مرحله";
+      ord.onchange = () => {
+        const want = Math.max(1, Math.min(seq.length, Number(ord.value) || i + 1)) - 1;
+        moveSeqTo(i, want);
+        renderSeq();
+      };
       const name = document.createElement("div");
       name.className = "name";
       name.textContent = s.name;
+      head.append(ord, name);
       const timing = document.createElement("div");
       timing.className = "timing";
       timing.append(makeMiniStepper(s, "work", 5, 600, 5), makeMiniStepper(s, "rest", 0, 300, 5));
@@ -332,9 +399,7 @@
       up.textContent = "بالا";
       up.disabled = i === 0;
       up.onclick = () => {
-        const tmp = seq[i - 1];
-        seq[i - 1] = seq[i];
-        seq[i] = tmp;
+        moveSeqTo(i, i - 1);
         renderSeq();
       };
       const down = document.createElement("button");
@@ -343,9 +408,7 @@
       down.textContent = "پایین";
       down.disabled = i === seq.length - 1;
       down.onclick = () => {
-        const tmp = seq[i + 1];
-        seq[i + 1] = seq[i];
-        seq[i] = tmp;
+        moveSeqTo(i, i + 1);
         renderSeq();
       };
       const rm = document.createElement("button");
@@ -357,7 +420,7 @@
         renderSeq();
       };
       row.append(up, down, rm);
-      li.append(name, timing, row);
+      li.append(head, timing, row);
       ol.append(li);
     });
   }
@@ -416,7 +479,7 @@
   }
 
   function startRun(id) {
-    warmSpeech();
+    unlockAudio();
     const w = state.wods.find((x) => x.id === id);
     if (!w || !w.seq.length) return;
     const steps = buildTimeline(w);
@@ -553,11 +616,19 @@
   function wire() {
     wireSteppers();
     warmSpeech();
+    document.addEventListener(
+      "pointerdown",
+      function () {
+        unlockAudio();
+      },
+      { once: true, passive: true }
+    );
     const bindNew = (sel) => {
       const btn = $(sel);
       if (btn) {
         btn.onclick = function (e) {
           if (e) e.preventDefault();
+          unlockAudio();
           openEdit(null);
         };
       }
@@ -603,6 +674,7 @@
     if (moveForm) {
       moveForm.onsubmit = function (e) {
         e.preventDefault();
+        unlockAudio();
         const name = ($("#moveName") || {}).value;
         const n = (name || "").trim();
         if (!n) return;
@@ -698,6 +770,6 @@
   show("home");
 
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js?v=12").catch(function () {});
+    navigator.serviceWorker.register("./sw.js?v=13").catch(function () {});
   }
 })();

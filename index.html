@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Vazirmatn:wght@500;700;800;900&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="styles.css?v=12"/>
+  <link rel="stylesheet" href="styles.css?v=13"/>
   <style>
     .view{display:none!important}
     .view.on{display:block!important}
@@ -68,15 +68,16 @@
         </div>
         <div class="card">
           <h3>حرکات این تمرین</h3>
+          <p class="edit-hint">نام را بنویس یا از میانبر بزن؛ زمان همان حرکت زیر خودش باز می‌شود. آخر «ذخیره تمرین» را بزن.</p>
           <form id="moveForm" class="row-form">
             <input id="moveName" type="text" placeholder="نام حرکت" required maxlength="60"/>
-            <button type="submit" class="btn primary sm">افزودن</button>
+            <button type="submit" class="btn primary sm" id="btnAddMove">افزودن حرکت</button>
           </form>
           <div id="pickMoves" class="chips"></div>
           <ol id="seqList" class="seq"></ol>
         </div>
         <div class="actions">
-          <button type="button" class="btn primary block sm" id="btnSaveWod">ذخیره</button>
+          <button type="button" class="btn primary block sm" id="btnSaveWod">ذخیره تمرین</button>
           <button type="button" class="btn ghost block sm" id="btnCancelEdit">انصراف</button>
         </div>
       </section>
@@ -118,7 +119,7 @@
       </section>
     </main>
   </div>
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=13"></script>
   <script>
     document.getElementById("btnNewWod").addEventListener("click", function () {
       if (window.Mojdei && typeof window.Mojdei.newWod === "function") {
